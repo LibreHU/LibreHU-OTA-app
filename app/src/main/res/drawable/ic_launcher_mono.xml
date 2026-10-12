@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single-colour glyph of the app icon: LibreHU Launcher draws it in the colours of its theme
+     (meta-data org.librehu.themed_icon). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M12,3.5V14.5M7,9.8L12,14.8 17,9.8M4.5,19.5H19.5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2" />
+</vector>

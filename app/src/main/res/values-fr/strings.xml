@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LibreHU Apps</string>
+    <string name="check">Vérifier</string>
+    <string name="checking">Vérification sur GitHub…</string>
+    <string name="never_checked">Pas encore vérifié</string>
+    <string name="all_up_to_date">Tout est à jour · %1$s</string>
+    <string name="check_failed">Échec de la vérification : %1$s</string>
+    <string name="rate_limited">Limite GitHub atteinte (60 vérifications par heure) : à nouveau après %1$s</string>
+    <string name="update_all">Tout mettre à jour</string>
+    <string name="edition">Édition</string>
+    <string name="edition_service">LibreHU service</string>
+    <string name="edition_ivi">Jancar ivi-services</string>
+    <string name="edition_generic">Android générique</string>
+    <string name="edition_hint">Version des applis à installer : celle qui utilise LibreHU service, les ivi-services de Jancar (ROM d\'origine) ou aucune. Les applis à version unique l\'ignorent.</string>
+    <string name="root_checking">Root : vérification…</string>
+    <string name="root_yes">Root : installations silencieuses</string>
+    <string name="root_no">Pas de root : Android demande avant chaque installation (autoriser LibreHU Apps à installer des applis inconnues)</string>
+    <string name="auto_check">Vérifier une fois par jour et notifier</string>
+    <string name="install">Installer</string>
+    <string name="update">Mettre à jour</string>
+    <string name="reinstall">Réinstaller</string>
+    <string name="open">Ouvrir</string>
+    <string name="install_failed">Échec de l\'installation : %1$s</string>
+    <string name="installed_ok">Installée</string>
+    <string name="reboot_needed">Remplacée dans /system : redémarrer l\'autoradio</string>
+    <string name="incompatible_title">%1$s : autre signature</string>
+    <string name="incompatible_text">La version installée a été signée avec une autre clé (les anciens builds avaient chacun la leur). Il faut d\'abord la désinstaller : ses réglages sont perdus. Les mises à jour suivantes s\'installeront par-dessus.</string>
+    <string name="incompatible_system">Cette appli est installée dans /system (privilégiée) : elle peut aussi y être remplacée en root, en gardant ses données ; l\'autoradio doit ensuite redémarrer.</string>
+    <string name="uninstall_install">Désinstaller et installer</string>
+    <string name="replace_system">Remplacer dans /system</string>
+    <string name="channel_updates">Mises à jour</string>
+    <plurals name="updates_title">
+        <item quantity="one">%1$d mise à jour disponible</item>
+        <item quantity="other">%1$d mises à jour disponibles</item>
+    </plurals>
+</resources>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LibreHU Apps</string>
+    <string name="check">Check</string>
+    <string name="checking">Checking GitHub…</string>
+    <string name="never_checked">Not checked yet</string>
+    <string name="all_up_to_date">Everything is up to date · %1$s</string>
+    <string name="check_failed">Check failed: %1$s</string>
+    <string name="rate_limited">GitHub limit reached (60 checks an hour): again after %1$s</string>
+    <string name="update_all">Update all</string>
+    <string name="edition">Edition</string>
+    <string name="edition_service">LibreHU service</string>
+    <string name="edition_ivi">Jancar ivi-services</string>
+    <string name="edition_generic">Generic Android</string>
+    <string name="edition_hint">Version of the apps to install: the one using LibreHU service, Jancar\'s ivi-services (stock ROM) or none. Apps with a single version ignore it.</string>
+    <string name="root_checking">Root: checking…</string>
+    <string name="root_yes">Root: silent installs</string>
+    <string name="root_no">No root: Android asks before each install (allow LibreHU Apps to install unknown apps)</string>
+    <string name="auto_check">Check once a day and notify</string>
+    <string name="install">Install</string>
+    <string name="update">Update</string>
+    <string name="reinstall">Reinstall</string>
+    <string name="open">Open</string>
+    <string name="install_failed">Install failed: %1$s</string>
+    <string name="installed_ok">Installed</string>
+    <string name="reboot_needed">Replaced in /system: restart the head unit</string>
+    <string name="incompatible_title">%1$s: other signature</string>
+    <string name="incompatible_text">The installed version was signed with another key (older builds each had their own). It must be uninstalled first: its settings are lost. Later updates install over it.</string>
+    <string name="incompatible_system">This app is installed in /system (privileged): it can also be replaced there as root, keeping its data; the head unit then has to restart.</string>
+    <string name="uninstall_install">Uninstall and install</string>
+    <string name="replace_system">Replace in /system</string>
+    <string name="channel_updates">Updates</string>
+    <plurals name="updates_title">
+        <item quantity="one">%1$d update available</item>
+        <item quantity="other">%1$d updates available</item>
+    </plurals>
+</resources>

@@ -1,0 +1,124 @@
+{
+  "apps": [
+    {
+      "id": "service",
+      "name": "LibreHU service",
+      "repo": "LibreHU/LibreHU-service",
+      "package": "org.librehu.service",
+      "description": "MCU, audio, Bluetooth, OBD",
+      "branches": [
+        "main"
+      ],
+      "tagged": false
+    },
+    {
+      "id": "launcher",
+      "name": "LibreHU Launcher",
+      "repo": "LibreHU/LibreHU-Launcher-App",
+      "package": "org.librehu.launcher",
+      "description": "",
+      "branches": [
+        "librehu-service",
+        "ivi",
+        "main"
+      ],
+      "tagged": false
+    },
+    {
+      "id": "dialer",
+      "name": "LibreHU Téléphone",
+      "repo": "LibreHU/LibreHU-dialer-app",
+      "package": "org.librehu.dialer",
+      "description": "",
+      "branches": [
+        "librehu-service",
+        "ivi",
+        "main"
+      ],
+      "tagged": false
+    },
+    {
+      "id": "fm",
+      "name": "LibreHU FM",
+      "repo": "LibreHU/LibreHU-FM-app",
+      "package": "org.librehu.fm",
+      "description": "",
+      "branches": [
+        "librehu-service",
+        "ivi",
+        "main"
+      ],
+      "tagged": false
+    },
+    {
+      "id": "widgets",
+      "name": "LibreHU Widgets",
+      "repo": "LibreHU/LibreHU-widget-app",
+      "package": "org.librehu.widgets",
+      "description": "",
+      "branches": [
+        "librehu-service",
+        "ivi",
+        "main"
+      ],
+      "tagged": false
+    },
+    {
+      "id": "btnremap",
+      "name": "LibreHU Touches",
+      "repo": "LibreHU/LibreHU-BtnRemap-app",
+      "package": "org.librehu.btnremap",
+      "description": "",
+      "branches": [
+        "librehu-service",
+        "ivi",
+        "main"
+      ],
+      "tagged": false
+    },
+    {
+      "id": "easysource",
+      "name": "LibreHU EasySource",
+      "repo": "LibreHU/LibreHU-EasySource-app",
+      "package": "org.librehu.easysource",
+      "description": "",
+      "branches": [
+        "main"
+      ],
+      "tagged": false
+    },
+    {
+      "id": "viper",
+      "name": "ViPER4Android LibreHU",
+      "repo": "LibreHU/LibreHU-ViPER4Android-app",
+      "package": "com.llsl.viper4android",
+      "description": "",
+      "branches": [
+        "librehu-service"
+      ],
+      "tagged": false
+    },
+    {
+      "id": "mcutools",
+      "name": "MCU Toolkit",
+      "repo": "LibreHU/MCU-tools-app",
+      "package": "com.dokt.jacmcu",
+      "description": "Diagnostic MCU",
+      "branches": [
+        "main"
+      ],
+      "tagged": false
+    },
+    {
+      "id": "ota",
+      "name": "LibreHU Apps (OTA)",
+      "repo": "LibreHU/LibreHU-OTA-app",
+      "package": "org.librehu.ota",
+      "description": "",
+      "branches": [
+        "main"
+      ],
+      "tagged": false
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write # rolling release per branch (LibreHU OTA)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # versionCode = commit count, versionName = git describe
+
+      - name: JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Android SDK licences
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+
+      - name: Signing key from the secrets (optional)
+        env:
+          KEYSTORE_B64: ${{ secrets.LIBREHU_KEYSTORE_B64 }}
+        run: |
+          # Without the secret the repository's keystore/librehu.jks signs the APK (app/build.gradle.kts).
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/librehu.jks"
+            echo "LIBREHU_KEYSTORE=$RUNNER_TEMP/librehu.jks" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build APK (debug)
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LibreHU-OTA-debug-${{ github.sha }}
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Rolling release of the branch (LibreHU OTA)
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+          APP: LibreHU-OTA
+        run: |
+          # One prerelease per branch, tag latest-<branch>, APK <app>-<branch>.apk; the notes carry the version
+          # read by LibreHU OTA (versionCode = commit count, as in app/build.gradle.kts).
+          SLUG="${BRANCH//\//-}"
+          TAG="latest-$SLUG"
+          OUT="$APP-$SLUG.apk"
+          cp "$(ls app/build/outputs/apk/debug/*.apk | head -n1)" "$OUT"
+          CODE=$(git rev-list --count HEAD)
+          NAME=$(git describe --tags --always --exclude 'latest-*')
+          printf 'versionCode=%s\nversionName=%s\nbranch=%s\ncommit=%s\n\n%s\n' \
+            "$CODE" "$NAME" "$BRANCH" "$GITHUB_SHA" "$(git log -1 --pretty=%s)" > notes.txt
+          git tag -f "$TAG" "$GITHUB_SHA"
+          git push -f origin "refs/tags/$TAG"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$APP $NAME ($BRANCH)" --notes-file notes.txt --prerelease
+          else
+            gh release create "$TAG" --title "$APP $NAME ($BRANCH)" --notes-file notes.txt --prerelease --verify-tag
+          fi
+          gh release upload "$TAG" "$OUT" --clobber

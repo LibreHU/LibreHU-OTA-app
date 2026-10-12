@@ -1,0 +1,13 @@
+*.iml
+.gradle
+.kotlin/
+/local.properties
+/.idea
+/build
+/app/build
+.externalNativeBuild
+.cxx
+*.jks
+*.keystore
+# Shared LibreHU signing key (keystore/README.md)
+!keystore/librehu.jks
