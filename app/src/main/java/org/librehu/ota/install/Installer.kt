@@ -7,7 +7,6 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
-import android.content.pm.PermissionInfo
 import android.os.Build
 import org.librehu.ota.data.GitHub
 import java.io.File
@@ -29,8 +28,13 @@ sealed class InstallResult {
      */
     data object Downgrade : InstallResult()
 
-    /** System app replaced in /system: active after a reboot. */
+    /** Put in /system (written there, or as a root module): active after a reboot. */
     data object RebootNeeded : InstallResult()
+
+    /** /system could not be made writable ([detail]: its mounts); a root module still can add the app. */
+    data class ReadOnly(
+        val detail: String,
+    ) : InstallResult()
 
     data class Failed(
         val message: String,
@@ -160,114 +164,4 @@ object Installer {
         )
         return true
     }
-
-    /** Where an APK would go in /system: [privileged] permissions it asks for, and the copy already there. */
-    data class SystemPlan(
-        /** Privileged permissions defined on this ROM that the APK requests: granted only from /system/priv-app. */
-        val privileged: List<String>,
-        /** Directory of the copy in /system (or /product, /vendor) when there is one. */
-        val current: String?,
-        /** The version installed in /data is signed with another key: Android deletes it, data included, at boot. */
-        val otherSignature: Boolean,
-    ) {
-        /** priv-app when the APK needs it, or when it already is one; plain /system/app otherwise. */
-        val recommendPrivApp get() = privileged.isNotEmpty() || current?.contains("/priv-app/") == true
-    }
-
-    fun systemPlan(
-        context: Context,
-        apk: File,
-        pkg: String,
-    ): SystemPlan {
-        val pm = context.packageManager
-        val archive = pm.getPackageArchiveInfo(apk.path, PackageManager.GET_PERMISSIONS or SIGNATURES)
-        val privileged =
-            archive?.requestedPermissions.orEmpty().filter { name ->
-                try {
-                    pm.getPermissionInfo(name, 0).protectionLevel and PermissionInfo.PROTECTION_FLAG_PRIVILEGED != 0
-                } catch (_: PackageManager.NameNotFoundException) {
-                    false
-                }
-            }
-        val installed =
-            try {
-                pm.getPackageInfo(pkg, SIGNATURES)
-            } catch (_: PackageManager.NameNotFoundException) {
-                null
-            }
-
-        @Suppress("DEPRECATION")
-        val otherSignature =
-            installed != null && !isSystemApp(installed) && archive != null &&
-                installed.signatures?.toSet() != archive.signatures?.toSet()
-        return SystemPlan(privileged.sorted(), systemCopy(pkg), otherSignature)
-    }
-
-    /**
-     * Directory of the /system copy of [pkg], also when an update in /data hides it: `dumpsys package` lists both
-     * code paths.
-     */
-    private fun systemCopy(pkg: String): String? =
-        Root
-            .run("dumpsys package $pkg | grep codePath=")
-            ?.output
-            ?.lines()
-            ?.map { it.substringAfter("codePath=").trim() }
-            ?.firstOrNull { p -> SYSTEM_DIRS.any { p.startsWith(it) } }
-
-    /**
-     * Installs [apk] in /system, as root: /system/priv-app/<pkg> ([privApp], with the privileged permissions it asks
-     * for whitelisted in /system/etc/permissions, without which Android 9 does not start when
-     * `ro.control_privapp_permissions=enforce`), or /system/app/<pkg>. Replaces the copy there was in /system; the
-     * version in /data, if any, stays an update of it with its data. Active after a reboot.
-     */
-    fun installSystem(
-        context: Context,
-        apk: File,
-        pkg: String,
-        privApp: Boolean,
-    ): InstallResult {
-        if (!Root.isAvailable()) return InstallResult.Failed("root")
-        if (archiveInfo(context, apk)?.packageName != pkg) return InstallResult.Failed("APK")
-        val plan = systemPlan(context, apk, pkg)
-        val dir = "/system/${if (privApp) "priv-app" else "app"}/$pkg"
-        val xml = "/system/etc/permissions/privapp-permissions-$pkg.xml"
-        val tmp = "/data/local/tmp/librehu-ota"
-        Root.run("rm -rf $tmp && mkdir -p $tmp && cat > $tmp/base.apk", apk.inputStream()) ?: return InstallResult.Failed("copy")
-        if (privApp && plan.privileged.isNotEmpty()) {
-            val whitelist =
-                buildString {
-                    append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- LibreHU Apps -->\n<permissions>\n")
-                    append("    <privapp-permissions package=\"$pkg\">\n")
-                    plan.privileged.forEach { append("        <permission name=\"$it\"/>\n") }
-                    append("    </privapp-permissions>\n</permissions>\n")
-                }
-            Root.run("cat > $tmp/perms.xml", whitelist.byteInputStream()) ?: return InstallResult.Failed("copy")
-        }
-        val script =
-            listOfNotNull(
-                "(mount -o rw,remount /system 2>/dev/null || mount -o rw,remount /)",
-                // The previous copy, wherever it was (another directory name, or app instead of priv-app).
-                plan.current?.takeIf { it != dir && it.startsWith("/system/") }?.let { "rm -rf '$it'" },
-                "rm -rf '$dir'",
-                "mkdir -p '$dir'",
-                "cp $tmp/base.apk '$dir/$pkg.apk'",
-                "chmod 755 '$dir'",
-                "chmod 644 '$dir/$pkg.apk'",
-                if (privApp && plan.privileged.isNotEmpty()) "cp $tmp/perms.xml '$xml' && chmod 644 '$xml'" else "rm -f '$xml'",
-                "(chcon -R u:object_r:system_file:s0 '$dir' 2>/dev/null; chcon u:object_r:system_file:s0 '$xml' 2>/dev/null; true)",
-                "sync",
-            ).joinToString(" && ")
-        val out =
-            Root.run(
-                "$script; e=\$?; rm -rf $tmp; (mount -o ro,remount /system 2>/dev/null || mount -o ro,remount / 2>/dev/null); exit \$e",
-            )
-                ?: return InstallResult.Failed("su")
-        return if (out.exit == 0) InstallResult.RebootNeeded else InstallResult.Failed(out.output.ifEmpty { "exit ${out.exit}" })
-    }
-
-    @Suppress("DEPRECATION")
-    private const val SIGNATURES = PackageManager.GET_SIGNATURES
-
-    private val SYSTEM_DIRS = listOf("/system/", "/product/", "/vendor/")
 }

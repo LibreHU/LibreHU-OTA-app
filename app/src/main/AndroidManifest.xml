@@ -24,6 +24,9 @@
         <package android:name="org.librehu.easysource" />
         <package android:name="com.llsl.viper4android" />
         <package android:name="com.dokt.jacmcu" />
+        <!-- Root managers: official KernelSU 3+ needs a metamodule to change /system, KernelSU Next does not. -->
+        <package android:name="me.weishu.kernelsu" />
+        <package android:name="com.rifsxd.ksunext" />
     </queries>
 
     <application

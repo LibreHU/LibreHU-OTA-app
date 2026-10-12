@@ -64,8 +64,14 @@
     <string name="system_no_privileged">Elle ne demande aucune permission privilégiée : /system/app suffit.</string>
     <string name="system_privileged">Elle demande %1$d permissions privilégiées, accordées seulement depuis /system/priv-app (ajoutées à la liste blanche d\'Android pour qu\'il démarre toujours) :</string>
     <string name="system_other_signature">La version installée actuellement est signée avec une autre clé : Android la supprime au redémarrage, ses réglages avec.</string>
-    <string name="system_warning">Écrit dans la partition /system (root, remontage en écriture). Les mises à jour suivantes s\'installent par-dessus, comme pour toute appli système. Pour la retirer : supprimer son dossier dans /system/app ou /system/priv-app et le fichier privapp-permissions de l\'appli dans /system/etc/permissions.</string>
+    <string name="system_warning">Les mises à jour suivantes s\'installent par-dessus, comme pour toute appli système. Pour la retirer : le module dans le gestionnaire root, ou, écrite dans /system, son dossier dans /system/app ou /system/priv-app et son fichier privapp-permissions dans /system/etc/permissions.</string>
     <string name="system_priv_app">/system/priv-app</string>
     <string name="system_app">/system/app</string>
     <string name="recommended">recommandé</string>
+    <string name="system_read_only">/system est en lecture seule (%1$s) : dm-verity, ou la surcouche des modules root. L\'installer plutôt en module : même résultat, sans toucher la partition.</string>
+    <string name="system_module_text">Module %1$s (recommandé) : monté par-dessus /system à chaque démarrage, la partition n\'est pas modifiée (fonctionne avec dm-verity), se retire depuis la liste des modules de %1$s.</string>
+    <string name="system_no_module">Ni Magisk, ni KernelSU, ni APatch trouvé : seule l\'écriture dans /system est possible (il faut un /system remontable en écriture).</string>
+    <string name="system_metamodule">KernelSU officiel 3.0 et plus : les modules ne modifient /system qu\'avec un metamodule (meta-overlayfs, depuis le gestionnaire KernelSU). KernelSU Next les monte lui-même.</string>
+    <string name="system_as_module">Installer en module %1$s</string>
+    <string name="system_write">Écrire dans /system</string>
 </resources>

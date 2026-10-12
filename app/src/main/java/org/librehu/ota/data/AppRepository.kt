@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import org.librehu.ota.install.InstallResult
 import org.librehu.ota.install.Installer
 import org.librehu.ota.install.Root
+import org.librehu.ota.install.SystemInstall
 import java.io.File
 
 /** What the list shows for one app. */
@@ -69,7 +70,7 @@ sealed class Task {
     /** APK downloaded for /system: the user picks priv-app or app ([plan] says which fits). */
     data class SystemChoice(
         val apk: File,
-        val plan: Installer.SystemPlan,
+        val plan: SystemInstall.Plan,
     ) : Task()
 
     data object RebootNeeded : Task()
@@ -212,15 +213,30 @@ class AppRepository private constructor(
         scope.launch { choose(pkg, task.apk) }
     }
 
-    /** After [Task.SystemChoice]: copy to /system/priv-app ([privApp]) or /system/app; active after a reboot. */
+    /**
+     * After [Task.SystemChoice]: /system/priv-app ([privApp]) or /system/app, as a root module ([module]) or written in
+     * the partition; active after a reboot. A read-only /system comes back to the choice, with the reason.
+     */
     fun installSystem(
         pkg: String,
         privApp: Boolean,
+        module: Boolean,
     ) {
-        val task = _apps.value.firstOrNull { it.app.packageName == pkg }?.task as? Task.SystemChoice ?: return
+        val s = _apps.value.firstOrNull { it.app.packageName == pkg } ?: return
+        val task = s.task as? Task.SystemChoice ?: return
         scope.launch {
             setTask(pkg, Task.Installing)
-            onInstallResult(pkg, Installer.installSystem(context, task.apk, pkg, privApp))
+            val result =
+                if (module) {
+                    SystemInstall.installModule(context, task.apk, pkg, s.app.name, privApp, task.plan)
+                } else {
+                    SystemInstall.installDirect(task.apk, pkg, privApp, task.plan)
+                }
+            if (result is InstallResult.ReadOnly) {
+                setTask(pkg, task.copy(plan = task.plan.copy(readOnly = result.detail)))
+            } else {
+                onInstallResult(pkg, result)
+            }
         }
     }
 
@@ -233,7 +249,7 @@ class AppRepository private constructor(
             setTask(pkg, Task.Failed("root"))
             return
         }
-        setTask(pkg, Task.SystemChoice(apk, withContext(Dispatchers.IO) { Installer.systemPlan(context, apk, pkg) }))
+        setTask(pkg, Task.SystemChoice(apk, withContext(Dispatchers.IO) { SystemInstall.plan(context, apk, pkg) }))
     }
 
     /** APK of [release] in the cache, checked to be [pkg]; null (and [Task.Failed]) when it went wrong. */
@@ -312,6 +328,7 @@ class AppRepository private constructor(
                 InstallResult.RebootNeeded -> Task.RebootNeeded
                 InstallResult.Incompatible -> Task.Incompatible(File(context.cacheDir, "apk/$pkg.apk"))
                 InstallResult.Downgrade -> Task.Downgrade(File(context.cacheDir, "apk/$pkg.apk"))
+                is InstallResult.ReadOnly -> Task.Failed("/system: ${result.detail}")
                 is InstallResult.Failed -> if (result.message.isEmpty()) Task.Idle else Task.Failed(result.message)
             },
         )

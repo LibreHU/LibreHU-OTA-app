@@ -33,14 +33,22 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
   adb shell pm grant org.librehu.ota android.permission.READ_LOGS
   ```
 - **Installer dans /system** (root) : l'APK devient une appli système, dans `/system/priv-app/<paquet>` ou
-  `/system/app/<paquet>`. LibreHU Apps recommande **priv-app** quand l'APK demande des permissions privilégiées
-  (seules accordées depuis priv-app) ou qu'il y est déjà, et `/system/app` sinon. En priv-app, ces permissions sont
-  ajoutées à la liste blanche `/system/etc/permissions/privapp-permissions-<paquet>.xml` : sans elle, Android 9
-  refuse de démarrer quand `ro.control_privapp_permissions=enforce`. L'ancienne copie dans /system est remplacée,
-  la version installée dans /data reste (mise à jour de l'appli système, données gardées) ; actif après un
-  redémarrage. Pour la retirer : supprimer le dossier et le fichier `privapp-permissions` correspondants (partition
-  /system remontée en écriture). Une ROM avec dm-verity actif ne démarre plus après une écriture dans /system :
-  ne l'utiliser que sur une ROM où /system est modifiable.
+  `/system/app/<paquet>`. LibreHU Apps présélectionne **priv-app** quand l'APK demande des permissions privilégiées
+  (seules accordées depuis priv-app) ou qu'il y est déjà, `/system/app` sinon. En priv-app, ces permissions sont
+  ajoutées à la liste blanche `privapp-permissions-<paquet>.xml` de `/system/etc/permissions` : sans elle, Android 9
+  refuse de démarrer quand `ro.control_privapp_permissions=enforce`. Actif après un redémarrage ; la version
+  installée dans /data reste (mise à jour de l'appli système, données gardées si même clé). Deux façons :
+  - **Module root** (recommandé, Magisk, KernelSU, KernelSU Next, APatch) : un module `librehu_<paquet>` installé par
+    la commande du gestionnaire (`magisk --install-module`, `ksud module install`, `apd module install`), monté
+    par-dessus /system à chaque démarrage. La partition n'est pas modifiée : fonctionne avec dm-verity ou un /system
+    en lecture seule, et se retire depuis la liste des modules. Une ancienne copie ailleurs dans /system est masquée
+    (`.replace`). KernelSU officiel 3.0 et plus ne monte les fichiers /system des modules qu'avec un **metamodule**
+    (meta-overlayfs) ; KernelSU Next et Magisk les montent eux-mêmes.
+  - **Écrire dans /system** : remonte /system (ou `/` en system-as-root) en écriture, en levant au besoin la
+    protection en lecture seule du bloc ; laissé tel quel s'il s'agit d'un périphérique dm-verity (`/dev/block/dm-*`),
+    car écrire sous dm-verity empêche de démarrer. Si /system reste en lecture seule, l'appli l'indique (avec ses
+    points de montage) et propose le module. Pour retirer : supprimer son dossier et son fichier
+    `privapp-permissions`.
 - **Vérification quotidienne** (option) avec notification des mises à jour disponibles.
 - API GitHub sans compte : 60 requêtes par heure et par adresse IP ; une vérification en fait une par appli, la
   liste des versions une, les changements d'une version une ou deux.

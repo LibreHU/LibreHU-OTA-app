@@ -529,7 +529,11 @@ private fun date(iso: String): String =
     runCatching { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date.from(Instant.parse(iso))) }
         .getOrDefault("")
 
-/** Where to put the APK in /system: priv-app (privileged permissions, whitelisted) or app; the best one first. */
+/**
+ * /system/priv-app (privileged permissions, whitelisted) or /system/app, the fitting one preselected; as a root module
+ * (the partition stays untouched) or written in /system.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SystemDialog(
     s: AppState,
@@ -537,6 +541,8 @@ private fun SystemDialog(
     repo: AppRepository,
 ) {
     val plan = t.plan
+    var privApp by remember(t.apk) { mutableStateOf(plan.recommendPrivApp) }
+    val best = stringResource(R.string.recommended)
     AlertDialog(
         onDismissRequest = { repo.dismiss(s.app.packageName) },
         title = { Text(stringResource(R.string.system_title, s.app.name)) },
@@ -545,7 +551,18 @@ private fun SystemDialog(
                 Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                plan.readOnly?.let {
+                    Text(stringResource(R.string.system_read_only, it), color = Color(0xFFF28B82))
+                }
                 Text(stringResource(R.string.system_text))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    for (p in listOf(true, false)) {
+                        val label = stringResource(if (p) R.string.system_priv_app else R.string.system_app)
+                        Pill(label + if (p == plan.recommendPrivApp) " · $best" else "", selected = privApp == p, small = true) {
+                            privApp = p
+                        }
+                    }
+                }
                 plan.current?.let { Text(stringResource(R.string.system_current, it), color = CarColors.TextDim, fontSize = 14.sp) }
                 if (plan.privileged.isEmpty()) {
                     Text(stringResource(R.string.system_no_privileged))
@@ -558,17 +575,25 @@ private fun SystemDialog(
                     )
                 }
                 if (plan.otherSignature) Text(stringResource(R.string.system_other_signature), color = Color(0xFFF28B82))
+                if (plan.manager != null) {
+                    Text(stringResource(R.string.system_module_text, plan.manager.label), color = CarColors.TextDim, fontSize = 13.sp)
+                } else {
+                    Text(stringResource(R.string.system_no_module), color = CarColors.TextDim, fontSize = 13.sp)
+                }
+                if (plan.needsMetamodule) Text(stringResource(R.string.system_metamodule), color = Color(0xFFFDD663), fontSize = 13.sp)
                 Text(stringResource(R.string.system_warning), color = CarColors.TextDim, fontSize = 13.sp)
             }
         },
         confirmButton = {
             Column(horizontalAlignment = Alignment.End) {
-                val priv = stringResource(R.string.system_priv_app)
-                val app = stringResource(R.string.system_app)
-                val best = stringResource(R.string.recommended)
-                for (privApp in if (plan.recommendPrivApp) listOf(true, false) else listOf(false, true)) {
-                    TextButton(onClick = { repo.installSystem(s.app.packageName, privApp) }) {
-                        Text((if (privApp) priv else app) + if (privApp == plan.recommendPrivApp) " · $best" else "")
+                plan.manager?.let { m ->
+                    TextButton(onClick = { repo.installSystem(s.app.packageName, privApp, module = true) }) {
+                        Text(stringResource(R.string.system_as_module, m.label) + " · $best")
+                    }
+                }
+                if (plan.readOnly == null) {
+                    TextButton(onClick = { repo.installSystem(s.app.packageName, privApp, module = false) }) {
+                        Text(stringResource(R.string.system_write))
                     }
                 }
             }

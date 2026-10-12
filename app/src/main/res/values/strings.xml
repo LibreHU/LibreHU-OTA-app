@@ -64,8 +64,14 @@
     <string name="system_no_privileged">It asks for no privileged permission: /system/app is enough.</string>
     <string name="system_privileged">It asks for %1$d privileged permissions, only granted from /system/priv-app (added to Android\'s whitelist so that it still starts):</string>
     <string name="system_other_signature">The version installed now is signed with another key: Android deletes it at the restart, its settings with it.</string>
-    <string name="system_warning">Writes to the /system partition (root, remount read-write). Later updates install over it, as for any system app. To remove it: delete its folder in /system/app or /system/priv-app and the privapp-permissions file of the app in /system/etc/permissions.</string>
+    <string name="system_warning">Later updates install over it, as for any system app. To remove it: the module in the root manager, or, written in /system, its folder in /system/app or /system/priv-app and its privapp-permissions file in /system/etc/permissions.</string>
     <string name="system_priv_app">/system/priv-app</string>
     <string name="system_app">/system/app</string>
     <string name="recommended">recommended</string>
+    <string name="system_read_only">/system is read-only (%1$s): dm-verity, or the overlay of root modules. Install it as a module instead: same result, the partition stays untouched.</string>
+    <string name="system_module_text">Module %1$s (recommended): mounted over /system at each start, the partition is not modified (works with dm-verity), removed from the modules list of %1$s.</string>
+    <string name="system_no_module">No Magisk, KernelSU or APatch found: only writing in /system is possible (needs a /system that can be remounted read-write).</string>
+    <string name="system_metamodule">Official KernelSU 3.0 and later: modules only change /system with a metamodule (meta-overlayfs, from the KernelSU manager). KernelSU Next mounts them itself.</string>
+    <string name="system_as_module">Install as a %1$s module</string>
+    <string name="system_write">Write in /system</string>
 </resources>
