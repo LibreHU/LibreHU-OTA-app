@@ -56,6 +56,41 @@
     [
      "shot",
      "home"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "drawer"
+    ],
+    [
+     "back"
+    ],
+    [
+     "home"
+    ],
+    [
+     "tapxy",
+     72,
+     641
+    ],
+    [
+     "wait",
+     1
+    ],
+    [
+     "shot",
+     "power"
+    ],
+    [
+     "back"
     ]
    ]
   },
@@ -128,6 +163,30 @@
     [
      "shot",
      "advanced"
+    ],
+    [
+     "tap",
+     "^Avancé$"
+    ],
+    [
+     "tap",
+     "^Outils MCU$"
+    ],
+    [
+     "shot",
+     "mcu-tools"
+    ],
+    [
+     "tap",
+     "^Véhicule$"
+    ],
+    [
+     "tap",
+     "^CAN$"
+    ],
+    [
+     "shot",
+     "can"
     ]
    ],
    "api": 30
@@ -193,6 +252,14 @@
     [
      "shot",
      "main"
+    ],
+    [
+     "tap",
+     "^Stations$"
+    ],
+    [
+     "shot",
+     "stations"
     ]
    ],
    "api": 30
@@ -244,12 +311,10 @@
      "settings"
     ],
     [
-     "tap",
-     "^Changer de source$"
-    ],
-    [
-     "wait",
-     1
+     "start",
+     "1.2",
+     "-a",
+     "org.librehu.easysource.action.NEXT"
     ],
     [
      "shot",
@@ -273,7 +338,8 @@
     ],
     [
      "tap",
-     "^Versions$"
+     "^Versions$",
+     1
     ],
     [
      "wait",
@@ -332,6 +398,30 @@
     [
      "shot",
      "main"
+    ],
+    [
+     "tap",
+     "^Commandes$"
+    ],
+    [
+     "shot",
+     "commands"
+    ],
+    [
+     "tap",
+     "^Console$"
+    ],
+    [
+     "shot",
+     "console"
+    ],
+    [
+     "tap",
+     "^Simulation$"
+    ],
+    [
+     "shot",
+     "simulation"
     ]
    ],
    "api": 30

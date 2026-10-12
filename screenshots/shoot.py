@@ -107,7 +107,7 @@ def dump():
     return adb("shell", "cat", "/sdcard/ui.xml")
 
 
-def find(xml, pattern):
+def find(xml, pattern, index=0):
     try:
         root = ET.fromstring(xml)
     except ET.ParseError:
@@ -117,6 +117,9 @@ def find(xml, pattern):
         if rx.search(node.get("text", "")) or rx.search(node.get("content-desc", "")):
             m = re.findall(r"\d+", node.get("bounds", ""))
             if len(m) == 4:
+                if index:
+                    index -= 1
+                    continue
                 x1, y1, x2, y2 = map(int, m)
                 return (x1 + x2) // 2, (y1 + y2) // 2
     return None
@@ -133,8 +136,9 @@ def play(app):
             adb("shell", "monkey", "-p", pkg, "-c", "android.intent.category.LAUNCHER", "1")
             time.sleep(float(args[0]) if args else 5)
         elif op == "start":
-            adb("shell", "am", "start", *args)
-            time.sleep(4)
+            # ["start", wait_s, am start arguments...]
+            adb("shell", "am", "start", *args[1:])
+            time.sleep(float(args[0]))
         elif op == "home":
             adb("shell", "input", "keyevent", "KEYCODE_HOME")
             time.sleep(4)
@@ -147,7 +151,8 @@ def play(app):
         elif op == "wait":
             time.sleep(float(args[0]))
         elif op == "tap":
-            xy = find(dump(), args[0])
+            # ["tap", regex] or ["tap", regex, n]: the n-th node matching (0 = first)
+            xy = find(dump(), args[0], int(args[1]) if len(args) > 1 else 0)
             if xy:
                 adb("shell", "input", "tap", str(xy[0]), str(xy[1]))
                 time.sleep(3)
