@@ -70,11 +70,30 @@ def setup():
         adb("shell", "am", "broadcast", "-a", "com.android.systemui.demo", *extra)
 
 
+API = int(os.environ.get("API", "28"))
+
+
+def apps():
+    """Apps of this emulator: Android 9 (the head unit's), or Android 11 for the ones with ARM-only native code, which
+    its x86_64 image translates (Android 9's does not)."""
+    return [a for a in PLAN["apps"] if a.get("api", 28) == API]
+
+
+def demo():
+    for extra in (["-e", "command", "clock", "-e", "hhmm", "1042"],
+                  ["-e", "command", "notifications", "-e", "visible", "false"]):
+        adb("shell", "am", "broadcast", "-a", "com.android.systemui.demo", *extra)
+
+
 def install():
     for app in PLAN["apps"]:
+        if app not in apps() and app["id"] != "launcher":
+            continue
         apk = os.path.join(APKS, app["id"] + ".apk")
         print(adb("install", "-r", "-g", "-t", apk), flush=True)
         adb("shell", "appops", "set", app["pkg"], "SYSTEM_ALERT_WINDOW", "allow")
+        for permission in app.get("grant", []):
+            adb("shell", "pm", "grant", app["pkg"], permission)
         for listener in app.get("listeners", []):
             adb("shell", "cmd", "notification", "allow_listener", listener)
     home = adb("shell", "cmd", "package", "resolve-activity", "--brief", "-a", "android.intent.action.MAIN",
@@ -145,6 +164,8 @@ def play(app):
             adb("shell", "input", "swipe", *map(str, args[:4]), "400")
             time.sleep(2)
         elif op == "shot":
+            demo()
+            time.sleep(1)
             open(os.path.join(d, args[0] + ".xml"), "w").write(dump())
             png = subprocess.run(["adb", "exec-out", "screencap", "-p"], capture_output=True).stdout
             open(os.path.join(d, args[0] + ".png"), "wb").write(png)
@@ -157,9 +178,10 @@ def play(app):
 def capture():
     os.makedirs(OUT, exist_ok=True)
     setup()
+    print(adb("shell", "getprop", "ro.product.cpu.abilist"), flush=True)
     install()
     only = sys.argv[2:]
-    for app in PLAN["apps"]:
+    for app in apps():
         if only and app["id"] not in only:
             continue
         try:

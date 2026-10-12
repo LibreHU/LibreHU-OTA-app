@@ -7,6 +7,46 @@
    "pkg": "org.librehu.launcher",
    "steps": [
     [
+     "launch",
+     8
+    ],
+    [
+     "shot",
+     "onboarding"
+    ],
+    [
+     "tap",
+     "^Passer$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "tap",
+     "^Passer$"
+    ],
+    [
+     "tap",
+     "^Passer$"
+    ],
+    [
+     "tap",
+     "^Passer$"
+    ],
+    [
+     "tap",
+     "^Passer$"
+    ],
+    [
+     "tap",
+     "^Passer$"
+    ],
+    [
+     "tap",
+     "^Terminer$"
+    ],
+    [
      "home"
     ],
     [
@@ -27,13 +67,70 @@
    "steps": [
     [
      "launch",
-     6
+     10
     ],
     [
      "shot",
-     "main"
+     "home"
+    ],
+    [
+     "tap",
+     "^Véhicule$"
+    ],
+    [
+     "shot",
+     "vehicle"
+    ],
+    [
+     "tap",
+     "^Audio$"
+    ],
+    [
+     "shot",
+     "audio"
+    ],
+    [
+     "tap",
+     "^Bluetooth$"
+    ],
+    [
+     "shot",
+     "bluetooth"
+    ],
+    [
+     "tap",
+     "^Écran$"
+    ],
+    [
+     "shot",
+     "display"
+    ],
+    [
+     "tap",
+     "^Lumières$"
+    ],
+    [
+     "shot",
+     "lights"
+    ],
+    [
+     "tap",
+     "^Système$"
+    ],
+    [
+     "shot",
+     "system"
+    ],
+    [
+     "tap",
+     "^Avancé$"
+    ],
+    [
+     "shot",
+     "advanced"
     ]
-   ]
+   ],
+   "api": 30
   },
   {
    "id": "dialer",
@@ -47,7 +144,39 @@
     ],
     [
      "shot",
-     "main"
+     "favorites"
+    ],
+    [
+     "tap",
+     "^Récents$"
+    ],
+    [
+     "shot",
+     "recents"
+    ],
+    [
+     "tap",
+     "^Contacts$"
+    ],
+    [
+     "shot",
+     "contacts"
+    ],
+    [
+     "tap",
+     "^Clavier$"
+    ],
+    [
+     "shot",
+     "keypad"
+    ],
+    [
+     "tap",
+     "^Réglages$"
+    ],
+    [
+     "shot",
+     "settings"
     ]
    ]
   },
@@ -59,13 +188,14 @@
    "steps": [
     [
      "launch",
-     6
+     8
     ],
     [
      "shot",
      "main"
     ]
-   ]
+   ],
+   "api": 30
   },
   {
    "id": "widgets",
@@ -111,7 +241,19 @@
     ],
     [
      "shot",
-     "main"
+     "settings"
+    ],
+    [
+     "tap",
+     "^Changer de source$"
+    ],
+    [
+     "wait",
+     1
+    ],
+    [
+     "shot",
+     "switcher"
     ]
    ]
   },
@@ -123,12 +265,42 @@
    "steps": [
     [
      "launch",
-     6
+     10
     ],
     [
      "shot",
-     "main"
+     "apps"
+    ],
+    [
+     "tap",
+     "^Versions$"
+    ],
+    [
+     "wait",
+     5
+    ],
+    [
+     "shot",
+     "versions"
+    ],
+    [
+     "back"
+    ],
+    [
+     "tap",
+     "^Journal$"
+    ],
+    [
+     "wait",
+     5
+    ],
+    [
+     "shot",
+     "logs"
     ]
+   ],
+   "grant": [
+    "android.permission.READ_LOGS"
    ]
   },
   {
@@ -155,13 +327,14 @@
    "steps": [
     [
      "launch",
-     6
+     8
     ],
     [
      "shot",
      "main"
     ]
-   ]
+   ],
+   "api": 30
   }
  ]
 }
