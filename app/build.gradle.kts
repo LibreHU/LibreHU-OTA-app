@@ -26,7 +26,7 @@ android {
         minSdk = 28
         targetSdk = 35
         versionCode = git("rev-list", "--count", "HEAD")?.toIntOrNull() ?: 1
-        versionName = git("describe", "--tags", "--always", "--dirty", "--exclude", "latest-*") ?: "dev"
+        versionName = git("describe", "--tags", "--always", "--dirty", "--exclude", "latest-*", "--exclude", "build-*") ?: "dev"
     }
     // One signing key for every LibreHU app, so that updates (LibreHU OTA) install over each other: LIBREHU_KEYSTORE*
     // from the CI secrets when set, else keystore/librehu.jks of the repository.

@@ -29,7 +29,9 @@ class InstallReceiver : BroadcastReceiver() {
                 val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE).orEmpty()
                 repo.onInstallResult(
                     pkg,
-                    if (message.contains("UPDATE_INCOMPATIBLE") || message.contains("signatures")) {
+                    if (message.contains("VERSION_DOWNGRADE")) {
+                        InstallResult.Downgrade
+                    } else if (message.contains("UPDATE_INCOMPATIBLE") || message.contains("signatures")) {
                         InstallResult.Incompatible
                     } else {
                         InstallResult.Failed(message.ifEmpty { "status $status" })
@@ -43,7 +45,17 @@ class InstallReceiver : BroadcastReceiver() {
 
             else -> {
                 val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE).orEmpty()
-                repo.onInstallResult(pkg, InstallResult.Failed(message.ifEmpty { "status $status" }))
+                repo.onInstallResult(
+                    pkg,
+                    if (message.contains(
+                            "VERSION_DOWNGRADE",
+                        )
+                    ) {
+                        InstallResult.Downgrade
+                    } else {
+                        InstallResult.Failed(message.ifEmpty { "status $status" })
+                    },
+                )
             }
         }
     }

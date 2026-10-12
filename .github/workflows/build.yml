@@ -64,7 +64,7 @@ jobs:
           OUT="$APP-$SLUG.apk"
           cp "$(ls app/build/outputs/apk/release/*.apk | head -n1)" "$OUT"
           CODE=$(git rev-list --count HEAD)
-          NAME=$(git describe --tags --always --exclude 'latest-*')
+          NAME=$(git describe --tags --always --exclude 'latest-*' --exclude 'build-*')
           printf 'versionCode=%s\nversionName=%s\nbranch=%s\ncommit=%s\n\n%s\n' \
             "$CODE" "$NAME" "$BRANCH" "$GITHUB_SHA" "$(git log -1 --pretty=%s)" > notes.txt
           git tag -f "$TAG" "$GITHUB_SHA"
@@ -75,3 +75,13 @@ jobs:
             gh release create "$TAG" --title "$APP $NAME ($BRANCH)" --notes-file notes.txt --prerelease --verify-tag
           fi
           gh release upload "$TAG" "$OUT" --clobber
+          # Numbered copy of this build, so that LibreHU OTA can install an older version; the last 15 per branch kept.
+          BTAG="build-$SLUG-$CODE"
+          if ! gh release view "$BTAG" >/dev/null 2>&1; then
+            git tag -f "$BTAG" "$GITHUB_SHA"
+            git push -f origin "refs/tags/$BTAG"
+            gh release create "$BTAG" "$OUT" --title "$APP $NAME ($BRANCH, $CODE)" --notes-file notes.txt --prerelease --verify-tag
+          fi
+          gh release list --limit 300 --json tagName --jq ".[].tagName | select(startswith(\"build-$SLUG-\"))" \
+            | awk -F- '{ print $NF, $0 }' | sort -n | head -n -15 | cut -d' ' -f2 \
+            | while read -r old; do gh release delete "$old" --cleanup-tag -y; done
