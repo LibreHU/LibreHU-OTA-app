@@ -1,0 +1,167 @@
+{
+ "apps": [
+  {
+   "id": "launcher",
+   "repo": "LibreHU/LibreHU-Launcher-App",
+   "tag": "latest-librehu-service",
+   "pkg": "org.librehu.launcher",
+   "steps": [
+    [
+     "home"
+    ],
+    [
+     "wait",
+     4
+    ],
+    [
+     "shot",
+     "home"
+    ]
+   ]
+  },
+  {
+   "id": "service",
+   "repo": "LibreHU/LibreHU-service",
+   "tag": "latest-main",
+   "pkg": "org.librehu.service",
+   "steps": [
+    [
+     "launch",
+     6
+    ],
+    [
+     "shot",
+     "main"
+    ]
+   ]
+  },
+  {
+   "id": "dialer",
+   "repo": "LibreHU/LibreHU-dialer-app",
+   "tag": "latest-librehu-service",
+   "pkg": "org.librehu.dialer",
+   "steps": [
+    [
+     "launch",
+     6
+    ],
+    [
+     "shot",
+     "main"
+    ]
+   ]
+  },
+  {
+   "id": "fm",
+   "repo": "LibreHU/LibreHU-FM-app",
+   "tag": "latest-librehu-service",
+   "pkg": "org.librehu.fm",
+   "steps": [
+    [
+     "launch",
+     6
+    ],
+    [
+     "shot",
+     "main"
+    ]
+   ]
+  },
+  {
+   "id": "widgets",
+   "repo": "LibreHU/LibreHU-widget-app",
+   "tag": "latest-librehu-service",
+   "pkg": "org.librehu.widgets",
+   "steps": [
+    [
+     "launch",
+     6
+    ],
+    [
+     "shot",
+     "main"
+    ]
+   ]
+  },
+  {
+   "id": "btnremap",
+   "repo": "LibreHU/LibreHU-BtnRemap-app",
+   "tag": "latest-librehu-service",
+   "pkg": "org.librehu.btnremap",
+   "steps": [
+    [
+     "launch",
+     6
+    ],
+    [
+     "shot",
+     "main"
+    ]
+   ]
+  },
+  {
+   "id": "easysource",
+   "repo": "LibreHU/LibreHU-EasySource-app",
+   "tag": "latest-main",
+   "pkg": "org.librehu.easysource",
+   "steps": [
+    [
+     "launch",
+     6
+    ],
+    [
+     "shot",
+     "main"
+    ]
+   ]
+  },
+  {
+   "id": "ota",
+   "repo": "LibreHU/LibreHU-OTA-app",
+   "tag": "latest-main",
+   "pkg": "org.librehu.ota",
+   "steps": [
+    [
+     "launch",
+     6
+    ],
+    [
+     "shot",
+     "main"
+    ]
+   ]
+  },
+  {
+   "id": "viper",
+   "repo": "LibreHU/LibreHU-ViPER4Android-app",
+   "tag": "latest-librehu-service",
+   "pkg": "com.llsl.viper4android",
+   "steps": [
+    [
+     "launch",
+     6
+    ],
+    [
+     "shot",
+     "main"
+    ]
+   ]
+  },
+  {
+   "id": "mcu",
+   "repo": "LibreHU/MCU-tools-app",
+   "tag": "latest-main",
+   "pkg": "com.dokt.jacmcu",
+   "steps": [
+    [
+     "launch",
+     6
+    ],
+    [
+     "shot",
+     "main"
+    ]
+   ]
+  }
+ ]
+}

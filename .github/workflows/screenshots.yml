@@ -1,0 +1,56 @@
+name: Screenshots
+
+# Screenshots of every LibreHU app on an Android 9 emulator (1280x720, 160 dpi like the head unit, French), for the
+# READMEs: screenshots/plan.json says what to open and capture; the PNGs go to the "screenshots" release.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["screenshots/plan.json", "screenshots/shoot.py", ".github/workflows/screenshots.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  shoot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Download APKs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 screenshots/shoot.py download
+
+      - name: Capture
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 28
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1280x720
+          script: python3 screenshots/shoot.py capture
+
+      - name: Publish
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd screenshots/out && zip -qr ../../screenshots.zip . && cd ../..
+          gh release view screenshots >/dev/null 2>&1 || \
+            gh release create screenshots --title "Screenshots" --notes "PNG of every LibreHU app (workflow Screenshots)." --prerelease
+          gh release upload screenshots screenshots.zip --clobber
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots/out

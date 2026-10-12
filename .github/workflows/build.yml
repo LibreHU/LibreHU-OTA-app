@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: ["**"]
+    paths-ignore: ["**.md", "docs/**", "screenshots/**", ".github/workflows/screenshots.yml"]
   pull_request:
     branches: [main]
   workflow_dispatch:
