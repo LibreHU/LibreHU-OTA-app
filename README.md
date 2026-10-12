@@ -53,6 +53,22 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
 - API GitHub sans compte : 60 requêtes par heure et par adresse IP ; une vérification en fait une par appli, la
   liste des versions une, les changements d'une version une ou deux.
 
+## Captures d'écran
+
+| | |
+|---|---|
+| ![Applis](docs/screenshots/apps.png)<br>Applis | ![Versions](docs/screenshots/versions.png)<br>Versions |
+| ![Journal](docs/screenshots/logs.png)<br>Journal |  |
+
+Captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans autoradio branché : les valeurs du véhicule et de la MCU sont vides. Refaites-les avec l'action **Screenshots** de [LibreHU-OTA-app](https://github.com/LibreHU/LibreHU-OTA-app/tree/main/screenshots).
+
+## Captures automatiques
+
+L'action **Screenshots** ([screenshots/](screenshots/)) installe la dernière release de chaque appli sur un émulateur
+Android 9 (1280×720, 160 dpi, en français ; Android 11 pour LibreHU service, FM et MCU Toolkit, dont le code natif
+est ARM seulement), suit `screenshots/plan.json` (ouvrir, toucher un texte, capturer) et publie les PNG dans la
+release `screenshots`. Ce sont les images des galeries des README.
+
 ## Construire
 
 Action **Build** (artefact et release `latest-main`), ou `./gradlew :app:assembleDebug` avec le SDK Android.
