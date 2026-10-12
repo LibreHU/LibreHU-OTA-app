@@ -116,20 +116,23 @@ class AppRepository private constructor(
                             }
                         }.awaitAll()
                         .toMap()
+                // Only the GitHub limit is shown for the whole list; other errors stay on the app's card.
                 var error: String? = null
+                var failures = 0
                 _apps.update { list ->
                     list.map { s ->
                         val r = results[s.app.packageName] ?: return@map s
                         r.exceptionOrNull()?.let { e ->
-                            error =
-                                if (e is RateLimitException) {
-                                    "rate:${e.resetEpochS}"
-                                } else {
-                                    e.message ?: e.javaClass.simpleName
-                                }
+                            failures++
+                            if (e is RateLimitException) error = "rate:${e.resetEpochS}"
                         }
-                        s.copy(release = r.getOrNull() ?: s.release, checkError = r.exceptionOrNull()?.message)
+                        // A failed request keeps the release seen before; a successful one replaces it (none for
+                        // this edition = null).
+                        s.copy(release = if (r.isSuccess) r.getOrNull() else s.release, checkError = r.exceptionOrNull()?.message)
                     }
+                }
+                if (error == null && failures == results.size && failures > 0) {
+                    error = results.values.firstNotNullOfOrNull { it.exceptionOrNull()?.message } ?: "network"
                 }
                 _message.value = error
                 if (error == null) prefs.edit().putLong(PREF_LAST_CHECK, System.currentTimeMillis()).apply()
