@@ -96,6 +96,11 @@ object Installer {
     ): InstallResult {
         if (Root.isAvailable()) {
             val out = Root.pmInstall(apk) ?: return InstallResult.Failed("su")
+            if (out.output.contains("Success")) {
+                // Compile now with the profile shipped in the APK (Compose's): smooth from the first start instead of
+                // after Android's overnight optimisation.
+                Thread({ Root.run("cmd package compile -m speed-profile -f $pkg", timeoutS = 300) }, "compile").start()
+            }
             return when {
                 out.output.contains("Success") -> InstallResult.Done
                 out.output.contains("INSTALL_FAILED_UPDATE_INCOMPATIBLE") ||

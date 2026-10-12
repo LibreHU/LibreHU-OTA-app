@@ -41,13 +41,13 @@ jobs:
           fi
 
       - name: Build APK (debug)
-        run: ./gradlew --no-daemon :app:assembleDebug
+        run: ./gradlew --no-daemon :app:assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: LibreHU-OTA-debug-${{ github.sha }}
-          path: app/build/outputs/apk/debug/*.apk
+          name: LibreHU-OTA-${{ github.sha }}
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
       - name: Rolling release of the branch (LibreHU OTA)
@@ -62,7 +62,7 @@ jobs:
           SLUG="${BRANCH//\//-}"
           TAG="latest-$SLUG"
           OUT="$APP-$SLUG.apk"
-          cp "$(ls app/build/outputs/apk/debug/*.apk | head -n1)" "$OUT"
+          cp "$(ls app/build/outputs/apk/release/*.apk | head -n1)" "$OUT"
           CODE=$(git rev-list --count HEAD)
           NAME=$(git describe --tags --always --exclude 'latest-*')
           printf 'versionCode=%s\nversionName=%s\nbranch=%s\ncommit=%s\n\n%s\n' \
