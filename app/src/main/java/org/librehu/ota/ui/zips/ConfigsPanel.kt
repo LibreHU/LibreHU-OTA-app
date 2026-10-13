@@ -1,9 +1,8 @@
-package org.librehu.ota.ui
+package org.librehu.ota.ui.zips
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -24,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -36,6 +34,11 @@ import org.librehu.ota.R
 import org.librehu.ota.data.ConfigItem
 import org.librehu.ota.data.ConfigType
 import org.librehu.ota.data.Configs
+import org.librehu.ota.ui.CarColors
+import org.librehu.ota.ui.components.Card
+import org.librehu.ota.ui.components.ErrorColor
+import org.librehu.ota.ui.components.Pill
+import org.librehu.ota.ui.components.SectionTitle
 
 /**
  * Configuration files (audio policy, CAN box config…) and recovery zips: those of the catalogue, or files chosen on the
@@ -43,7 +46,7 @@ import org.librehu.ota.data.Configs
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ConfigsScreen() {
+fun ConfigsPanel() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val items = remember { Configs.items(context) }
@@ -84,16 +87,16 @@ fun ConfigsScreen() {
         }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(CarColors.Background),
-        contentPadding = PaddingValues(20.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
             Text(stringResource(R.string.cfg_hint), color = CarColors.TextDim, fontSize = 15.sp)
             if (running != null) LinearProgressIndicator(Modifier.fillMaxWidth(), color = CarColors.Accent)
-            result?.let { (text, ok) -> Text(text, color = if (ok) CarColors.Accent else Color(0xFFF28B82), fontSize = 15.sp) }
+            result?.let { (text, ok) -> Text(text, color = if (ok) CarColors.Accent else ErrorColor, fontSize = 15.sp) }
         }
-        item { Title(stringResource(R.string.cfg_catalog)) }
+        item { SectionTitle(stringResource(R.string.cfg_catalog)) }
         if (items.isEmpty()) item { Text(stringResource(R.string.cfg_catalog_empty), color = CarColors.TextDim, fontSize = 14.sp) }
         items(items, key = { it.id }) { c ->
             Card {
@@ -111,7 +114,7 @@ fun ConfigsScreen() {
         }
         item {
             Card {
-                Title(stringResource(R.string.cfg_local_file))
+                SectionTitle(stringResource(R.string.cfg_local_file))
                 Text(stringResource(R.string.cfg_local_file_hint), color = CarColors.TextDim, fontSize = 14.sp)
                 OutlinedTextField(
                     value = dest,
@@ -144,7 +147,7 @@ fun ConfigsScreen() {
         }
         item {
             Card {
-                Title(stringResource(R.string.cfg_local_zip))
+                SectionTitle(stringResource(R.string.cfg_local_zip))
                 Text(stringResource(R.string.cfg_local_zip_hint), color = CarColors.TextDim, fontSize = 14.sp)
                 Pill(stringResource(R.string.cfg_pick_zip), enabled = running == null) {
                     pickZip.launch(arrayOf("application/zip", "application/octet-stream"))

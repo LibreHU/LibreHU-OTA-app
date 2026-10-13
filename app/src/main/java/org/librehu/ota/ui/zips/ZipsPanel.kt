@@ -1,7 +1,6 @@
-package org.librehu.ota.ui
+package org.librehu.ota.ui.zips
 
 import android.os.Build
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -29,7 +28,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +41,11 @@ import org.librehu.ota.data.Configs
 import org.librehu.ota.data.FlashZip
 import org.librehu.ota.data.ZipIndex
 import org.librehu.ota.data.Zips
+import org.librehu.ota.ui.CarColors
+import org.librehu.ota.ui.components.Card
+import org.librehu.ota.ui.components.ErrorColor
+import org.librehu.ota.ui.components.Pill
+import org.librehu.ota.ui.components.WarningColor
 
 /** What a confirmation dialog is about to do. */
 private enum class ZipAction { FLASH, IMAGE }
@@ -53,7 +56,7 @@ private enum class ZipAction { FLASH, IMAGE }
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ZipsScreen() {
+fun ZipsPanel() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var index by remember { mutableStateOf<ZipIndex?>(null) }
@@ -79,8 +82,8 @@ fun ZipsScreen() {
     val usedCategories = idx?.categories.orEmpty().filter { c -> idx?.zips.orEmpty().any { !it.hidden && it.category == c.id } }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(CarColors.Background),
-        contentPadding = PaddingValues(20.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
@@ -94,8 +97,8 @@ fun ZipsScreen() {
                 Pill(stringResource(R.string.check), icon = Icons.Default.Refresh, small = true, enabled = !loading) { reload++ }
             }
             if (loading || running != null) LinearProgressIndicator(Modifier.fillMaxWidth(), color = CarColors.Accent)
-            error?.let { Text(stringResource(R.string.zips_error, it), color = Color(0xFFF28B82), fontSize = 14.sp) }
-            result?.let { (text, ok) -> Text(text, color = if (ok) CarColors.Accent else Color(0xFFF28B82), fontSize = 15.sp) }
+            error?.let { Text(stringResource(R.string.zips_error, it), color = ErrorColor, fontSize = 14.sp) }
+            result?.let { (text, ok) -> Text(text, color = if (ok) CarColors.Accent else ErrorColor, fontSize = 15.sp) }
         }
         if (usedCategories.isNotEmpty()) {
             item {
@@ -122,11 +125,11 @@ fun ZipsScreen() {
                     fontSize = 13.sp,
                 )
                 if (z.description.isNotEmpty()) Text(z.description, color = CarColors.Text, fontSize = 15.sp)
-                if (z.warning.isNotEmpty()) Text("⚠ " + z.warning, color = Color(0xFFFDD663), fontSize = 14.sp)
+                if (z.warning.isNotEmpty()) Text("⚠ " + z.warning, color = WarningColor, fontSize = 14.sp)
                 if (!z.compatible) {
                     Text(
                         stringResource(R.string.zips_incompatible, Build.DEVICE, z.devices.joinToString()),
-                        color = Color(0xFFF28B82),
+                        color = ErrorColor,
                         fontSize = 14.sp,
                     )
                 }
