@@ -220,6 +220,18 @@ object SystemInstall {
         append("    </privapp-permissions>\n</permissions>\n")
     }
 
+    /** APK of the /system copy of [pkg] (root, see [systemCopy]), readable by everyone; null without one. */
+    fun systemApk(pkg: String): String? {
+        if (!Root.isAvailable()) return null
+        val dir = systemCopy(pkg) ?: return null
+        if (dir.endsWith(".apk")) return dir
+        return Root
+            .run("ls '$dir'/*.apk 2>/dev/null | head -n 1")
+            ?.output
+            ?.trim()
+            ?.takeIf { it.endsWith(".apk") }
+    }
+
     /**
      * Directory of the /system copy of [pkg], also when an update in /data hides it: `dumpsys package` lists both
      * code paths.

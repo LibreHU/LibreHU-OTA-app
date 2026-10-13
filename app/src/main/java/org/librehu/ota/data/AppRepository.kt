@@ -631,16 +631,7 @@ class AppRepository private constructor(
         val system = flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM != 0
         val updated = flags and android.content.pm.ApplicationInfo.FLAG_UPDATED_SYSTEM_APP != 0
         // The /system copy hidden by an update in /data.
-        val factory: PackageInfo? =
-            if (updated) {
-                try {
-                    context.packageManager.getPackageInfo(app.packageName, PackageManager.MATCH_FACTORY_ONLY)
-                } catch (_: PackageManager.NameNotFoundException) {
-                    null
-                }
-            } else {
-                null
-            }
+        val factory: PackageInfo? = if (updated) factoryInfo(app.packageName, info?.lastUpdateTime ?: 0) else null
         val inSystem =
             if (updated) {
                 factory
@@ -659,6 +650,47 @@ class AppRepository private constructor(
             dataCode = inData?.code(),
             dataName = inData?.versionName,
         )
+    }
+
+    /** /system copies already read, by package and update time of the /data one. */
+    private val factories = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, PackageInfo?>>()
+
+    /**
+     * Version of the /system copy hidden by an update: PackageManager's MATCH_FACTORY_ONLY (0x00200000, not in the
+     * SDK), kept only when it really points to a system partition; else, with root, the APK of the copy that
+     * `dumpsys package` names.
+     */
+    private fun factoryInfo(
+        pkg: String,
+        updateTime: Long,
+    ): PackageInfo? {
+        factories[pkg]?.takeIf { it.first == updateTime }?.let { return it.second }
+        val pm = context.packageManager
+        val fromFlag =
+            try {
+                pm.getPackageInfo(pkg, MATCH_FACTORY_ONLY).takeIf { p ->
+                    p.applicationInfo?.sourceDir?.let { d -> SYSTEM_PARTITIONS.any { d.startsWith(it) } } == true
+                }
+            } catch (_: Exception) {
+                null
+            }
+        if (fromFlag != null) {
+            factories[pkg] = updateTime to fromFlag
+            return fromFlag
+        }
+        // Root and dumpsys take a moment: on a thread, the list refreshed once known.
+        if (factories.putIfAbsent(pkg, -1L to null) == null || factories[pkg]?.first != -1L) {
+            factories[pkg] = -1L to null
+            scope.launch {
+                val info =
+                    org.librehu.ota.install.SystemInstall
+                        .systemApk(pkg)
+                        ?.let { pm.getPackageArchiveInfo(it, 0) }
+                factories[pkg] = updateTime to info
+                if (info != null) refreshInstalled()
+            }
+        }
+        return null
     }
 
     private fun PackageInfo.code(): Long =
@@ -683,6 +715,8 @@ class AppRepository private constructor(
 
     companion object {
         private const val TAG = "LibreHU-OTA"
+        private const val MATCH_FACTORY_ONLY = 0x00200000
+        private val SYSTEM_PARTITIONS = listOf("/system/", "/product/", "/vendor/", "/system_ext/")
         private const val PREF_EDITION = "edition"
         private const val PREF_CATALOG = "catalog"
         private const val PREF_LAST_CHECK = "last_check"
