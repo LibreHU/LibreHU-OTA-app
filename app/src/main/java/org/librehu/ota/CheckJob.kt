@@ -48,6 +48,7 @@ class CheckJob : JobService() {
 
     companion object {
         private const val JOB_ID = 4201
+        private const val JOB_ID_BOOT = 4202
         private const val CHANNEL = "updates"
         private const val NOTIFICATION_ID = 1
 
@@ -79,6 +80,17 @@ class CheckJob : JobService() {
                     .setRequiredNetworkType(if (s.wifiOnly) JobInfo.NETWORK_TYPE_UNMETERED else JobInfo.NETWORK_TYPE_ANY)
                     .setPeriodic(TimeUnit.HOURS.toMillis(s.intervalH.coerceAtLeast(1).toLong()))
                     .setPersisted(true)
+                    .build(),
+            )
+        }
+
+        /** One check when a network is there (after a start); the list is kept for when there is none. */
+        fun scheduleOnce(context: Context) {
+            val js = context.getSystemService(JobScheduler::class.java) ?: return
+            js.schedule(
+                JobInfo
+                    .Builder(JOB_ID_BOOT, ComponentName(context, CheckJob::class.java))
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .build(),
             )
         }
@@ -123,6 +135,10 @@ class BootReceiver : BroadcastReceiver() {
         context: Context,
         intent: Intent,
     ) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) CheckJob.schedule(context)
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            CheckJob.schedule(context)
+            // A fresh list after each start, as soon as there is network.
+            CheckJob.scheduleOnce(context)
+        }
     }
 }

@@ -25,6 +25,11 @@ quelle que soit la page affichée. Le code de l'interface est rangé par page (`
 installation (`install/`) n'ont pas changé.
 
 ## Fonctions
+- **Hors ligne** : la liste des applis et leurs dernières versions est gardée après chaque vérification. Sans réseau,
+  elle s'affiche telle quelle (« Pas de réseau : liste du … ») sans requête ratée ; avec réseau, chaque ouverture de
+  LibreHU Apps vérifie à nouveau, ainsi qu'une fois après chaque démarrage de l'autoradio (dès que le réseau est là),
+  et l'appli revérifie seule quand le réseau revient.
+- **Redémarrer** (bouton marche de la barre du haut, root) : Android, ou dans TWRP.
 
 - **Catalogue** : [catalog.json](catalog.json) de ce dépôt (téléchargé à chaque vérification), avec une copie
   intégrée à l'appli quand GitHub n'est pas joignable. Pour ajouter une appli : une entrée dans ce fichier. Il
@@ -72,6 +77,10 @@ installation (`install/`) n'ont pas changé.
     liste blanche des permissions, ancienne copie retirée), l'ajoute à OpenRecoveryScript ; un seul redémarrage dans
     TWRP écrit toutes les installations en attente (bandeau « Redémarrer dans TWRP »), vérifie les APK et relance
     Android. Choix « Par TWRP » dans Réglages › /system, ou automatique après un échec d'écriture.
+  - **Flash groupé par TWRP** (bouton « Flasher dans /system (TWRP) » de la barre du haut) : plusieurs applis cochées
+    d'un coup (raccourcis : applis système, mises à jour, aucune), chacune avec sa version actuelle : mise à jour,
+    réinstallation de la même version (réparation) ou première installation, en priv-app ou app selon son plan.
+    Toutes écrites au même redémarrage dans TWRP.
   - **Écrire dans /system** : comme `adb remount` : le vrai bloc (`by-name/system`) est rendu inscriptible
     (`blockdev --setrw`), puis le montage qu'Android utilise (`/` en system-as-root, qui apparaît comme `/dev/root`)
     est remonté en écriture sur place, gardé seulement si un fichier de test s'écrit ; remis en lecture seule ensuite.

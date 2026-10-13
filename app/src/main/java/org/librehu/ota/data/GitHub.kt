@@ -19,7 +19,35 @@ data class Release(
     val summary: String,
     /** Commit the APK was built from (notes `commit=`). */
     val commit: String = "",
-)
+) {
+    /** For the list kept between starts (shown without network). */
+    fun toJson(): JSONObject =
+        JSONObject()
+            .put("tag", tag)
+            .put("versionCode", versionCode)
+            .put("versionName", versionName)
+            .put("apkUrl", apkUrl)
+            .put("apkName", apkName)
+            .put("size", size)
+            .put("publishedAt", publishedAt)
+            .put("summary", summary)
+            .put("commit", commit)
+
+    companion object {
+        fun fromJson(o: JSONObject): Release =
+            Release(
+                tag = o.optString("tag"),
+                versionCode = o.optLong("versionCode"),
+                versionName = o.optString("versionName"),
+                apkUrl = o.optString("apkUrl"),
+                apkName = o.optString("apkName"),
+                size = o.optLong("size", -1),
+                publishedAt = o.optString("publishedAt"),
+                summary = o.optString("summary"),
+                commit = o.optString("commit"),
+            )
+    }
+}
 
 class NotFoundException(
     url: String,

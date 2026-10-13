@@ -20,11 +20,15 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -35,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -89,6 +94,8 @@ fun OtaApp(
     val settings by OtaSettingsStore.get(LocalContext.current).collectAsStateWithLifecycle()
     var page by rememberSaveable { mutableStateOf(Page.APPS) }
     var details by rememberSaveable { mutableStateOf<String?>(null) }
+    var bulk by remember { mutableStateOf(false) }
+    val offline by repo.offline.collectAsStateWithLifecycle()
     BackHandler(enabled = details != null) { details = null }
 
     val updates = apps.count { it.updateAvailable && it.app.packageName !in settings.ignored }
@@ -136,10 +143,13 @@ fun OtaApp(
             val d = details
             TopBar(
                 title = if (d != null) apps.firstOrNull { it.app.packageName == d }?.app?.name.orEmpty() else stringResource(page.label),
-                subtitle = if (d == null) status(context, busy, message, repo.lastCheck) else null,
+                subtitle = if (d == null) status(context, busy, message, repo.lastCheck, offline) else null,
                 onBack = if (d != null) ({ details = null }) else null,
                 onRefresh = if (d == null && page != Page.SETTINGS) ({ repo.check() }) else null,
                 busy = busy,
+                onBulk = { bulk = true },
+                onReboot = { repo.reboot() },
+                onRebootRecovery = { repo.rebootRecovery() },
             )
             val pending by repo.pendingRecovery.collectAsStateWithLifecycle()
             if (pending.isNotEmpty()) RecoveryBanner(pending) { repo.rebootRecovery() }
@@ -160,6 +170,7 @@ fun OtaApp(
         }
     }
     apps.firstOrNull { it.needsChoice }?.let { ChoiceDialogs(it, repo) }
+    if (bulk) org.librehu.ota.ui.details.BulkSystemDialog(repo) { bulk = false }
 }
 
 @Composable
@@ -169,7 +180,11 @@ private fun TopBar(
     onBack: (() -> Unit)?,
     onRefresh: (() -> Unit)?,
     busy: Boolean,
+    onBulk: () -> Unit,
+    onReboot: () -> Unit,
+    onRebootRecovery: () -> Unit,
 ) {
+    var menu by remember { mutableStateOf(false) }
     Column {
         Row(
             Modifier.fillMaxWidth().padding(start = if (onBack != null) 8.dp else 24.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
@@ -188,6 +203,24 @@ private fun TopBar(
             if (onRefresh != null) {
                 IconButton(onClick = onRefresh, enabled = !busy) {
                     Icon(Icons.Default.Refresh, stringResource(R.string.check), tint = if (busy) CarColors.TextDim else CarColors.Text, modifier = Modifier.size(28.dp))
+                }
+            }
+            IconButton(onClick = onBulk) {
+                Icon(Icons.Default.SystemUpdateAlt, stringResource(R.string.bulk_title), tint = CarColors.Text, modifier = Modifier.size(28.dp))
+            }
+            Box {
+                IconButton(onClick = { menu = true }) {
+                    Icon(Icons.Default.PowerSettingsNew, stringResource(R.string.reboot), tint = CarColors.Text, modifier = Modifier.size(28.dp))
+                }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.reboot)) }, onClick = {
+                        menu = false
+                        onReboot()
+                    })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.reboot_recovery)) }, onClick = {
+                        menu = false
+                        onRebootRecovery()
+                    })
                 }
             }
         }
@@ -232,9 +265,12 @@ private fun status(
     busy: Boolean,
     message: String?,
     last: Long,
+    offline: Boolean,
 ): String =
     when {
         busy -> context.getString(R.string.checking)
+        offline && last == 0L -> context.getString(R.string.offline_never)
+        offline -> context.getString(R.string.offline_cached, org.librehu.ota.ui.components.dateTime(last))
         message != null && message.startsWith("rate:") ->
             context.getString(R.string.rate_limited, time((message.removePrefix("rate:").toLongOrNull() ?: 0) * 1000))
         message != null -> context.getString(R.string.check_failed, message)

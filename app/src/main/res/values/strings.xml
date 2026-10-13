@@ -215,4 +215,18 @@
     <string name="recovery_reboot">Restart into TWRP</string>
     <string name="set_system_way_recovery">With TWRP</string>
     <string name="set_system_way_hint">Automatic: root module when the root manager mounts it, else written in /system (remounted read-write as adb remount does); if Android still cannot write it, TWRP instead. With TWRP: the installs wait in the recovery script, one restart into TWRP writes them all.</string>
+    <string name="bulk_title">Flash into /system (TWRP)</string>
+    <string name="bulk_text">Each ticked app gets its current version written into /system by TWRP: update, reinstall of the same version (repair) or first install. All of them in one reboot into the recovery (button above the list once ready). Root.</string>
+    <string name="bulk_select_system">System apps</string>
+    <string name="bulk_select_updates">Updates</string>
+    <string name="bulk_select_none">None</string>
+    <string name="bulk_install">install %1$s</string>
+    <string name="bulk_update">%1$s → %2$s</string>
+    <string name="bulk_reinstall">reinstall %1$s</string>
+    <string name="bulk_go">Prepare %1$d for TWRP</string>
+    <string name="bulk_failed">TWRP zip not written</string>
+    <string name="reboot">Restart</string>
+    <string name="reboot_recovery">Restart into TWRP</string>
+    <string name="offline_never">No network: no list yet</string>
+    <string name="offline_cached">No network: list of %1$s</string>
 </resources>

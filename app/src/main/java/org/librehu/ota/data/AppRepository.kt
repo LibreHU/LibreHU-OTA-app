@@ -129,7 +129,8 @@ class AppRepository private constructor(
     /** Version name each running install goes to (history). */
     private val targets = java.util.concurrent.ConcurrentHashMap<String, String>()
 
-    private val _apps = MutableStateFlow(loadCatalog().map { AppState(it) })
+    // The list of the last check (releases included) until the next one: usable without network.
+    private val _apps = MutableStateFlow(loadCatalog().let { apps -> loadReleases().let { r -> apps.map { AppState(it, release = r[it.packageName]) } } })
     val apps: StateFlow<List<AppState>> = _apps
 
     private val _busy = MutableStateFlow(false)
@@ -144,6 +145,27 @@ class AppRepository private constructor(
     val editionFlow: StateFlow<Edition> = editionState
 
     val lastCheck: Long get() = prefs.getLong(PREF_LAST_CHECK, 0)
+
+    private val _offline = MutableStateFlow(false)
+
+    /** No network at the last attempt: the list shown is the one kept from [lastCheck]. */
+    val offline: StateFlow<Boolean> = _offline
+
+    /** Network usable now (validated when Android knows). */
+    fun online(): Boolean {
+        val cm = context.getSystemService(android.net.ConnectivityManager::class.java) ?: return true
+        val caps = cm.getNetworkCapabilities(cm.activeNetwork ?: return false) ?: return false
+        return caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    /** At start: always a check when there is network, else the kept list (no failed request, no waiting). */
+    fun checkIfOnline() {
+        if (online()) {
+            check()
+        } else {
+            _offline.value = true
+        }
+    }
 
     init {
         // Notifications of the downloads and installs (and the foreground service while they run).
@@ -173,6 +195,11 @@ class AppRepository private constructor(
         scope.launch {
             if (!checking.tryLock()) return@launch
             try {
+                if (!online()) {
+                    _offline.value = true
+                    return@launch
+                }
+                _offline.value = false
                 _busy.value = true
                 _message.value = null
                 runCatching { GitHub.get(Catalog.REMOTE_URL) }
@@ -208,7 +235,10 @@ class AppRepository private constructor(
                     error = results.values.firstNotNullOfOrNull { it.exceptionOrNull()?.message } ?: "network"
                 }
                 _message.value = error
-                if (error == null) prefs.edit().putLong(PREF_LAST_CHECK, System.currentTimeMillis()).apply()
+                if (error == null) {
+                    prefs.edit().putLong(PREF_LAST_CHECK, System.currentTimeMillis()).apply()
+                    saveReleases()
+                }
             } finally {
                 _busy.value = false
                 checking.unlock()
@@ -383,6 +413,46 @@ class AppRepository private constructor(
     /** Reboots into TWRP, which flashes the waiting zips then starts Android again. */
     fun rebootRecovery() {
         scope.launch { Configs.rebootRecovery() }
+    }
+
+    /**
+     * Several apps into /system by TWRP at once: each one's current release (an update, or the same version again to
+     * repair it, or a first install) is downloaded, made into a recovery zip in /system/priv-app or /system/app as its
+     * plan recommends, and added to OpenRecoveryScript; [rebootRecovery] then flashes them all. Root.
+     */
+    fun flashSystemBulk(pkgs: List<String>) {
+        scope.launch {
+            if (!Root.isAvailable()) {
+                _message.value = "root"
+                return@launch
+            }
+            for (pkg in pkgs) {
+                val state = _apps.value.firstOrNull { it.app.packageName == pkg } ?: continue
+                val release = state.release ?: continue
+                if (busyTask(pkg)) continue
+                setTask(pkg, Task.Queued)
+                val apk = downloads.withPermit { download(pkg, release) } ?: continue
+                installing.withLock {
+                    setTask(pkg, Task.Installing)
+                    val plan = SystemInstall.plan(context, apk, pkg)
+                    val ok =
+                        toRecovery(
+                            pkg,
+                            apk,
+                            OtaSettingsStore.value(context).copy(systemAlsoData = false),
+                            state,
+                            plan.recommendPrivApp,
+                            plan,
+                        )
+                    if (!ok) setTask(pkg, Task.Failed(context.getString(org.librehu.ota.R.string.bulk_failed)))
+                }
+            }
+        }
+    }
+
+    /** Reboots Android (root). */
+    fun reboot() {
+        scope.launch { Root.run("svc power reboot || reboot") }
     }
 
     /** Every available update, except the ignored apps; LibreHU Apps itself last. */
@@ -817,6 +887,24 @@ class AppRepository private constructor(
         }
     }
 
+    /** Releases of the last check, for the edition they were read for. */
+    private fun saveReleases() {
+        val apps = org.json.JSONObject()
+        _apps.value.forEach { s -> s.release?.let { apps.put(s.app.packageName, it.toJson()) } }
+        prefs
+            .edit()
+            .putString(PREF_RELEASES, org.json.JSONObject().put("edition", edition().name).put("apps", apps).toString())
+            .apply()
+    }
+
+    private fun loadReleases(): Map<String, Release> =
+        runCatching {
+            val o = org.json.JSONObject(prefs.getString(PREF_RELEASES, null) ?: return emptyMap())
+            if (o.optString("edition") != edition().name) return emptyMap()
+            val apps = o.getJSONObject("apps")
+            apps.keys().asSequence().associateWith { Release.fromJson(apps.getJSONObject(it)) }
+        }.getOrDefault(emptyMap())
+
     private fun loadCatalog(): List<CatalogApp> =
         prefs.getString(PREF_CATALOG, null)?.let { runCatching { CatalogApp.parse(it) }.getOrNull() } ?: Catalog.BUILT_IN
 
@@ -826,6 +914,7 @@ class AppRepository private constructor(
         private val SYSTEM_PARTITIONS = listOf("/system/", "/product/", "/vendor/", "/system_ext/")
         private const val PREF_EDITION = "edition"
         private const val PREF_CATALOG = "catalog"
+        private const val PREF_RELEASES = "releases"
         private const val PREF_LAST_CHECK = "last_check"
         private const val PREF_WRITE_PROTECTED = "system_write_protected"
         private const val PREF_RECOVERY = "recovery_pending"

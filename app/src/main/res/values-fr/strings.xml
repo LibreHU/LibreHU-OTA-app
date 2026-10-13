@@ -215,4 +215,18 @@
     <string name="recovery_reboot">Redémarrer dans TWRP</string>
     <string name="set_system_way_recovery">Par TWRP</string>
     <string name="set_system_way_hint">Automatique : module root si le gestionnaire le monte, sinon écriture dans /system (remonté en écriture comme adb remount) ; si Android n\'arrive toujours pas à l\'écrire, par TWRP. Par TWRP : les installations attendent dans le script de la recovery, un seul redémarrage dans TWRP les écrit toutes.</string>
+    <string name="bulk_title">Flasher dans /system (TWRP)</string>
+    <string name="bulk_text">Chaque appli cochée reçoit sa version actuelle dans /system par TWRP : mise à jour, réinstallation de la même version (réparation) ou première installation. Toutes en un seul redémarrage dans le recovery (bouton au-dessus de la liste une fois prêt). Root.</string>
+    <string name="bulk_select_system">Applis système</string>
+    <string name="bulk_select_updates">Mises à jour</string>
+    <string name="bulk_select_none">Aucune</string>
+    <string name="bulk_install">installer %1$s</string>
+    <string name="bulk_update">%1$s → %2$s</string>
+    <string name="bulk_reinstall">réinstaller %1$s</string>
+    <string name="bulk_go">Préparer %1$d pour TWRP</string>
+    <string name="bulk_failed">Zip TWRP non écrit</string>
+    <string name="reboot">Redémarrer</string>
+    <string name="reboot_recovery">Redémarrer dans TWRP</string>
+    <string name="offline_never">Pas de réseau : aucune liste pour l\'instant</string>
+    <string name="offline_cached">Pas de réseau : liste du %1$s</string>
 </resources>

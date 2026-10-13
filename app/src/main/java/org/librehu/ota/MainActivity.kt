@@ -27,9 +27,22 @@ class MainActivity : ComponentActivity() {
         CheckJob.schedule(this)
         val repo = AppRepository.get(this)
         repo.refreshInstalled()
-        if (System.currentTimeMillis() - repo.lastCheck > RECHECK_MS) repo.check()
+        // Always a fresh list with network; without, the one kept from the last check, and a check as soon as the
+        // network is back.
+        repo.checkIfOnline()
+        runCatching {
+            getSystemService(android.net.ConnectivityManager::class.java)?.registerDefaultNetworkCallback(network)
+        }
         setContent { CarTheme { OtaApp(repo, ::open) } }
     }
+
+    private val network =
+        object : android.net.ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(n: android.net.Network) {
+                val repo = AppRepository.get(this@MainActivity)
+                if (repo.offline.value) repo.check()
+            }
+        }
 
     override fun onResume() {
         super.onResume()
@@ -38,16 +51,12 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        runCatching { getSystemService(android.net.ConnectivityManager::class.java)?.unregisterNetworkCallback(network) }
         theme.value.stop()
         super.onDestroy()
     }
 
     private fun open(pkg: String) {
         packageManager.getLaunchIntentForPackage(pkg)?.let { startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-    }
-
-    private companion object {
-        /** Opening the app checks again after this delay (GitHub allows 60 unauthenticated requests per hour). */
-        const val RECHECK_MS = 10 * 60 * 1000L
     }
 }

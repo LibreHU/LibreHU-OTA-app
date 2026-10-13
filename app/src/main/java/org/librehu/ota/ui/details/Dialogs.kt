@@ -2,6 +2,7 @@ package org.librehu.ota.ui.details
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -16,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,6 +39,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -258,3 +262,77 @@ private fun logColor(line: String): Color =
         "D", "V" -> CarColors.TextDim
         else -> CarColors.Text
     }
+
+/**
+ * Several apps into /system by TWRP: each ticked app gets its current release (update, reinstall of the same version,
+ * or first install), all flashed in one reboot into the recovery. Preselected: the system apps with an update.
+ */
+@Composable
+fun BulkSystemDialog(
+    repo: AppRepository,
+    onDismiss: () -> Unit,
+) {
+    val apps by repo.apps.collectAsStateWithLifecycle()
+    val self = LocalContext.current.packageName
+    val candidates = apps.filter { it.release != null && it.app.packageName != self }
+    var picked by remember {
+        mutableStateOf(candidates.filter { it.systemCode != null && it.updateAvailable }.map { it.app.packageName }.toSet())
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth(0.9f),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        title = { Text(stringResource(R.string.bulk_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Hint(stringResource(R.string.bulk_text))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Pill(stringResource(R.string.bulk_select_system), small = true) {
+                        picked = candidates.filter { it.systemCode != null }.map { it.app.packageName }.toSet()
+                    }
+                    Pill(stringResource(R.string.bulk_select_updates), small = true) {
+                        picked = candidates.filter { it.updateAvailable }.map { it.app.packageName }.toSet()
+                    }
+                    Pill(stringResource(R.string.bulk_select_none), small = true) { picked = emptySet() }
+                }
+                LazyColumn(Modifier.heightIn(max = 380.dp)) {
+                    items(candidates, key = { it.app.packageName }) { s ->
+                        val pkg = s.app.packageName
+                        val r = s.release!!
+                        val what =
+                            when {
+                                s.installedCode == null -> stringResource(R.string.bulk_install, r.versionName)
+                                r.versionCode > s.installedCode -> stringResource(R.string.bulk_update, s.installedName ?: "?", r.versionName)
+                                else -> stringResource(R.string.bulk_reinstall, r.versionName)
+                            }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable { picked = if (pkg in picked) picked - pkg else picked + pkg }
+                                    .padding(vertical = 4.dp),
+                        ) {
+                            Checkbox(checked = pkg in picked, onCheckedChange = { on -> picked = if (on) picked + pkg else picked - pkg })
+                            Column(Modifier.weight(1f)) {
+                                Text(s.app.name, color = CarColors.Text, fontSize = 16.sp)
+                                Text(
+                                    what + if (s.systemCode != null) " · /system" else "",
+                                    color = CarColors.TextDim,
+                                    fontSize = 13.sp,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = picked.isNotEmpty(), onClick = {
+                repo.flashSystemBulk(candidates.map { it.app.packageName }.filter { it in picked })
+                onDismiss()
+            }) { Text(stringResource(R.string.bulk_go, picked.size)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },
+    )
+}
