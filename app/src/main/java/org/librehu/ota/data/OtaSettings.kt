@@ -17,6 +17,23 @@ enum class InstallMethod {
     ANDROID,
 }
 
+/** Which apps the automatic /system updates apply to. */
+enum class SystemScope {
+    /** Apps that already have a copy in /system (priv-app or app). */
+    SYSTEM_APPS,
+
+    /** Every LibreHU app. */
+    ALL,
+}
+
+/** How an app is put in /system. */
+enum class SystemWay {
+    /** Root module when the root manager can mount it, else written in /system (module again if read-only). */
+    AUTO,
+    MODULE,
+    DIRECT,
+}
+
 data class OtaSettings(
     val autoCheck: Boolean = true,
     /** Hours between background checks. */
@@ -38,6 +55,12 @@ data class OtaSettings(
     val githubToken: String = "",
     /** Packages never updated by "update all" nor the background install. */
     val ignored: Set<String> = emptySet(),
+    /** Updates go to /system (priv-app or app, as the APK needs) instead of only /data. Root. */
+    val systemAuto: Boolean = false,
+    val systemScope: SystemScope = SystemScope.SYSTEM_APPS,
+    val systemWay: SystemWay = SystemWay.AUTO,
+    /** Also installed in /data: the new version runs at once, /system has it after the reboot. */
+    val systemAlsoData: Boolean = true,
 ) {
     companion object {
         val INTERVALS = listOf(6, 12, 24, 48, 168)
@@ -79,6 +102,10 @@ object OtaSettingsStore {
             .putInt("parallel", s.parallelDownloads)
             .putString("github_token", s.githubToken)
             .putStringSet("ignored", s.ignored)
+            .putBoolean("system_auto", s.systemAuto)
+            .putString("system_scope", s.systemScope.name)
+            .putString("system_way", s.systemWay.name)
+            .putBoolean("system_also_data", s.systemAlsoData)
             .apply()
     }
 
@@ -101,6 +128,10 @@ object OtaSettingsStore {
                 parallelDownloads = p.getInt("parallel", d.parallelDownloads),
                 githubToken = p.getString("github_token", "").orEmpty(),
                 ignored = p.getStringSet("ignored", emptySet())?.toSet().orEmpty(),
+                systemAuto = p.getBoolean("system_auto", d.systemAuto),
+                systemScope = SystemScope.entries.firstOrNull { it.name == p.getString("system_scope", null) } ?: d.systemScope,
+                systemWay = SystemWay.entries.firstOrNull { it.name == p.getString("system_way", null) } ?: d.systemWay,
+                systemAlsoData = p.getBoolean("system_also_data", d.systemAlsoData),
             )
         GitHub.token = state.value.githubToken
     }

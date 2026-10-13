@@ -61,6 +61,13 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
   téléchargements simultanés, garder ou supprimer les APK téléchargés, **jeton GitHub** facultatif (5000 requêtes
   par heure au lieu de 60, envoyé seulement à api.github.com), **historique** des installations, configurations et
   flashs (date, versions avant → après, résultat).
+- **Mise à jour automatique dans /system** (Paramètres, root, désactivée par défaut) : les mises à jour (manuelles,
+  « Tout mettre à jour », arrière-plan) vont dans `/system/priv-app` ou `/system/app` selon le besoin de l'appli,
+  pour les applis déjà dans /system ou pour toutes ; par module root, par écriture dans /system, ou automatique
+  (module si le gestionnaire root le monte, sinon écriture, et module en secours si /system reste en lecture seule).
+  Option « aussi dans /data » (activée) : la nouvelle version tourne tout de suite, /system l'a au démarrage suivant.
+  Si /system refuse, l'installation normale dans /data se fait à la place (noté dans l'historique). LibreHU Apps
+  elle-même reste dans /data.
 - **Onglet Configs** (root) : fichiers de configuration (politique audio, effets, config de la box CAN, config
   Jancar…) et **zips recovery** :
   - du catalogue (`configs` de [catalog.json](catalog.json)) :

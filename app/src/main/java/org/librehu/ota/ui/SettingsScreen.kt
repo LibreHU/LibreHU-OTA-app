@@ -36,6 +36,8 @@ import org.librehu.ota.data.History
 import org.librehu.ota.data.InstallMethod
 import org.librehu.ota.data.OtaSettings
 import org.librehu.ota.data.OtaSettingsStore
+import org.librehu.ota.data.SystemScope
+import org.librehu.ota.data.SystemWay
 import java.io.File
 import java.text.DateFormat
 import java.util.Date
@@ -132,6 +134,42 @@ fun SettingsScreen() {
                 }
                 if (s.ignored.isNotEmpty()) {
                     Text(stringResource(R.string.set_ignored, s.ignored.size), color = CarColors.TextDim, fontSize = 14.sp)
+                }
+            }
+        }
+        item {
+            Card {
+                Title(stringResource(R.string.set_system))
+                SwitchLine(stringResource(R.string.set_system_auto), s.systemAuto, stringResource(R.string.set_system_auto_hint)) { on ->
+                    set { it.copy(systemAuto = on) }
+                }
+                if (s.systemAuto) {
+                    Text(stringResource(R.string.set_system_scope), color = CarColors.Text, fontSize = 17.sp)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        for ((v, label) in listOf(
+                            SystemScope.SYSTEM_APPS to R.string.set_system_scope_system,
+                            SystemScope.ALL to R.string.set_system_scope_all,
+                        )) {
+                            Pill(stringResource(label), selected = s.systemScope == v, small = true) { set { it.copy(systemScope = v) } }
+                        }
+                    }
+                    Text(stringResource(R.string.set_system_way), color = CarColors.Text, fontSize = 17.sp)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        for ((v, label) in listOf(
+                            SystemWay.AUTO to R.string.set_system_way_auto,
+                            SystemWay.MODULE to R.string.set_system_way_module,
+                            SystemWay.DIRECT to R.string.set_system_way_direct,
+                        )) {
+                            Pill(stringResource(label), selected = s.systemWay == v, small = true) { set { it.copy(systemWay = v) } }
+                        }
+                    }
+                    SwitchLine(
+                        stringResource(R.string.set_system_data),
+                        s.systemAlsoData,
+                        stringResource(R.string.set_system_data_hint),
+                    ) { on ->
+                        set { it.copy(systemAlsoData = on) }
+                    }
                 }
             }
         }

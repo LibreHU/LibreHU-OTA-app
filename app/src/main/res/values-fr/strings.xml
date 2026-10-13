@@ -129,4 +129,16 @@
     <string name="tab_apps">Applis</string>
     <string name="tab_configs">Configs</string>
     <string name="tab_settings">Paramètres</string>
+    <string name="set_system">Mises à jour dans /system</string>
+    <string name="set_system_auto">Mettre à jour automatiquement dans /system</string>
+    <string name="set_system_auto_hint">Root. Les mises à jour (manuelles, « Tout mettre à jour » et en arrière-plan) vont dans /system/priv-app ou /system/app selon le besoin de chaque appli (permissions privilégiées), actives après un redémarrage. LibreHU Apps elle-même reste dans /data.</string>
+    <string name="set_system_scope">Pour</string>
+    <string name="set_system_scope_system">Applis déjà dans /system</string>
+    <string name="set_system_scope_all">Toutes les applis LibreHU</string>
+    <string name="set_system_way">Comment</string>
+    <string name="set_system_way_auto">Automatique</string>
+    <string name="set_system_way_module">Module root</string>
+    <string name="set_system_way_direct">Écrit dans /system</string>
+    <string name="set_system_data">Aussi dans /data (active tout de suite)</string>
+    <string name="set_system_data_hint">La nouvelle version tourne sans attendre le redémarrage ; /system l\'a dès le démarrage suivant (même clé de signature nécessaire).</string>
 </resources>

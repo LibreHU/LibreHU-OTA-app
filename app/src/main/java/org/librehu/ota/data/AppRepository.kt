@@ -204,6 +204,7 @@ class AppRepository private constructor(
                     setTask(pkg, Task.Installing)
                     targets[pkg] = release.versionName
                     val s = OtaSettingsStore.value(context)
+                    if (s.systemAuto && withContext(Dispatchers.IO) { toSystem(pkg, apk, s) }) return@withLock
                     val result = withContext(Dispatchers.IO) { Installer.install(context, apk, pkg, s.method, s.compile) }
                     if (result == InstallResult.Incompatible) {
                         setTask(pkg, Task.Incompatible(apk))
@@ -228,6 +229,49 @@ class AppRepository private constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Automatic /system update (settings): priv-app or app as [SystemInstall.Plan.recommendPrivApp] says, as a root
+     * module or written in /system ([SystemWay]), and also in /data when asked (running at once). True when done here,
+     * false when this app is not concerned or /system refused it (then the normal install in /data).
+     */
+    private fun toSystem(
+        pkg: String,
+        apk: File,
+        s: OtaSettings,
+    ): Boolean {
+        if (pkg == context.packageName || !Root.isAvailable()) return false
+        val state = _apps.value.firstOrNull { it.app.packageName == pkg } ?: return false
+        val plan = SystemInstall.plan(context, apk, pkg)
+        if (s.systemScope == SystemScope.SYSTEM_APPS && plan.current == null && !state.systemApp) return false
+        val canModule = plan.manager != null && !plan.needsMetamodule
+        val privApp = plan.recommendPrivApp
+        var result =
+            when {
+                s.systemWay == SystemWay.MODULE || (s.systemWay == SystemWay.AUTO && canModule) -> {
+                    SystemInstall.installModule(context, apk, pkg, state.app.name, privApp, plan)
+                }
+
+                else -> {
+                    SystemInstall.installDirect(apk, pkg, privApp, plan)
+                }
+            }
+        // Read-only /system: a module still adds the app.
+        if (result is InstallResult.ReadOnly && canModule) {
+            result = SystemInstall.installModule(context, apk, pkg, state.app.name, privApp, plan)
+        }
+        if (result != InstallResult.RebootNeeded) {
+            // /system refused (read-only without module, no root manager…): the usual install in /data instead.
+            History.add(context, state.app.name, "/system", false, (result as? InstallResult.Failed)?.message ?: result.toString())
+            return false
+        }
+        if (s.systemAlsoData && !plan.otherSignature) {
+            // The same APK in /data: the new version runs now; /system has it from the next start.
+            Installer.install(context, apk, pkg, InstallMethod.ROOT, s.compile)
+        }
+        onInstallResult(pkg, result)
+        return true
     }
 
     /** Every available update, except the ignored apps; LibreHU Apps itself last. */
