@@ -173,8 +173,10 @@ object SystemInstall {
         privApp: Boolean,
         plan: Plan,
     ): InstallResult {
-        val dir = "/system/${if (privApp) "priv-app" else "app"}/$pkg"
-        val xml = "/system/etc/permissions/privapp-permissions-$pkg.xml"
+        // Written through the private read-write mount of the system partition ($S = /system there, see RwMount).
+        val rel = "${if (privApp) "priv-app" else "app"}/$pkg"
+        val dir = "\$S/$rel"
+        val xml = "\$S/etc/permissions/privapp-permissions-$pkg.xml"
         val tmp = "/data/local/tmp/librehu-ota"
         Root.run("rm -rf $tmp && mkdir -p $tmp && cat > $tmp/base.apk", apk.inputStream()) ?: return InstallResult.Failed("copy")
         if (privApp && plan.privileged.isNotEmpty()) {
@@ -183,21 +185,27 @@ object SystemInstall {
         val script =
             listOfNotNull(
                 // The previous copy, wherever it was (another directory name, or app instead of priv-app).
-                plan.current?.takeIf { it.trimEnd('/') != dir && it.startsWith("/system/") }?.let { "rm -rf '$it'" },
-                "rm -rf '$dir'",
-                "mkdir -p '$dir'",
-                "cp $tmp/base.apk '$dir/$pkg.apk'",
-                "chmod 755 '$dir'",
-                "chmod 644 '$dir/$pkg.apk'",
-                if (privApp && plan.privileged.isNotEmpty()) "cp $tmp/perms.xml '$xml' && chmod 644 '$xml'" else "rm -f '$xml'",
-                "(chcon -R u:object_r:system_file:s0 '$dir' 2>/dev/null; chcon u:object_r:system_file:s0 '$xml' 2>/dev/null; true)",
+                plan.current
+                    ?.trimEnd('/')
+                    ?.takeIf { it != "/system/$rel" && it.startsWith("/system/") && Regex("[A-Za-z0-9_./-]+").matches(it) }
+                    ?.let { "rm -rf \"\$S/${it.removePrefix("/system/")}\"" },
+                "rm -rf \"$dir\"",
+                "mkdir -p \"$dir\"",
+                "cp $tmp/base.apk \"$dir/$pkg.apk\"",
+                "chmod 755 \"$dir\"",
+                "chmod 644 \"$dir/$pkg.apk\"",
+                if (privApp && plan.privileged.isNotEmpty()) "cp $tmp/perms.xml \"$xml\" && chmod 644 \"$xml\"" else "rm -f \"$xml\"",
+                "(chcon -R u:object_r:system_file:s0 \"$dir\" 2>/dev/null; chcon u:object_r:system_file:s0 \"$xml\" 2>/dev/null; true)",
                 "sync",
             ).joinToString(" && ")
         val out =
-            Root.run("$REMOUNT_RW\n$script\ne=\$?\nrm -rf $tmp\n$REMOUNT_RO\nexit \$e") ?: return InstallResult.Failed("su")
+            Root.run(
+                "${RwMount.LIB}\nif ! rw_open /system; then rm -rf $tmp; exit $READ_ONLY_EXIT; fi\nS=\$RW\n" +
+                    "$script\ne=\$?\nrw_close\nrm -rf $tmp\nexit \$e",
+            ) ?: return InstallResult.Failed("su")
         return when {
             out.exit == 0 -> InstallResult.RebootNeeded
-            out.exit == READ_ONLY_EXIT -> InstallResult.ReadOnly(out.output.substringAfter("READONLY ").trim())
+            out.exit == READ_ONLY_EXIT -> InstallResult.ReadOnly(readOnlyReason(out.output))
             else -> InstallResult.Failed(out.output.ifEmpty { "exit ${out.exit}" })
         }
     }
@@ -236,28 +244,15 @@ object SystemInstall {
 
     private const val READ_ONLY_EXIT = 30
 
-    /**
-     * /system (or / with system-as-root) read-write. A plain block device that Android set read-only is set writable
-     * first; a dm-verity one (/dev/block/dm-*) is left alone, since writing under verity breaks the boot. Exits with
-     * [READ_ONLY_EXIT] and the mounts when /system stays read-only.
-     */
-    private val REMOUNT_RW =
-        """
-        for mp in /system /; do
-          dev=${'$'}(grep " ${'$'}mp " /proc/mounts | tail -n 1 | cut -d' ' -f1)
-          [ -n "${'$'}dev" ] || continue
-          case "${'$'}dev" in /dev/block/dm-*) ;; /dev/*) blockdev --setrw "${'$'}dev" 2>/dev/null ;; esac
-          mount -o rw,remount "${'$'}mp" 2>/dev/null && break
-        done
-        if ! touch /system/.librehu-ota 2>/dev/null; then
-          echo "READONLY ${'$'}(grep -E ' /system | / ' /proc/mounts | cut -d' ' -f1-4 | tr '\n' ';')"
-          rm -rf /data/local/tmp/librehu-ota
-          exit $READ_ONLY_EXIT
-        fi
-        rm -f /system/.librehu-ota
-        """.trimIndent()
-
-    private const val REMOUNT_RO = "(mount -o ro,remount /system 2>/dev/null || mount -o ro,remount / 2>/dev/null); true"
+    /** Why [RwMount] could not open the partition, with what to do under dm-verity. */
+    internal fun readOnlyReason(output: String): String {
+        val line = output.lines().lastOrNull { it.isNotBlank() }?.trim() ?: return "read-only"
+        return if (line.startsWith("VERITY")) {
+            "dm-verity (${line.removePrefix("VERITY").trim()}): fastboot --disable-verity flash vbmeta vbmeta.img"
+        } else {
+            line
+        }
+    }
 
     /** Magisk's standard module installer (module_installer.sh). */
     private val UPDATE_BINARY =

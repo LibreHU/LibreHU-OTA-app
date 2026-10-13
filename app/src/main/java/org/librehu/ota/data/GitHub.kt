@@ -25,14 +25,38 @@ class NotFoundException(
     url: String,
 ) : IOException("HTTP 404 $url")
 
+class HttpException(
+    val code: Int,
+    url: String,
+) : IOException("HTTP $code $url")
+
 class RateLimitException(
     val resetEpochS: Long,
 ) : IOException("GitHub API rate limit")
 
-/** Releases through the public GitHub API (no account: 60 requests per hour and per IP). */
+/**
+ * Releases of the LibreHU apps. The API (no account: 60 requests per hour and per IP) is spared: the release of a
+ * branch is read from its `release.txt` file (published next to the APK by the CI, a download that does not count
+ * against the API limit), API answers are kept with their ETag (an unchanged answer comes back as 304, free with a
+ * token), commit comparisons are kept, and nothing is asked to the API until the limit is reset.
+ */
 object GitHub {
     private const val API = "https://api.github.com"
+    private const val WEB = "https://github.com"
     private const val TIMEOUT_MS = 15_000
+
+    /** API answers by URL, with their ETag. */
+    private val etags =
+        object : LinkedHashMap<String, Pair<String, String>>(32, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pair<String, String>>?) = size > 64
+        }
+
+    /** Commit comparisons (never change for two given commits). */
+    private val compared = HashMap<String, List<String>>()
+
+    /** Epoch second when the API accepts requests again (rate limit reached). */
+    @Volatile
+    private var limitedUntilS = 0L
 
     /** Release of [app] for [branch]: the rolling `latest-<branch>` prerelease, or for a [CatalogApp.tagged] app the newest one. */
     fun release(
@@ -40,6 +64,7 @@ object GitHub {
         branch: String,
     ): Release? {
         if (app.tagged) return releases(app, "").firstOrNull()
+        releaseFile(app, "latest-${slug(branch)}")?.let { return it }
         val r =
             try {
                 JSONObject(get("$API/repos/${app.repo}/releases/tags/latest-${slug(branch)}"))
@@ -47,6 +72,38 @@ object GitHub {
                 return null
             }
         return parse(r)
+    }
+
+    /**
+     * Release from the `release.txt` of [tag] (`apk=`, `size=`, `date=`, then the notes), without the API. Null when
+     * the release has no such file (built before it existed) or github.com refuses: the API is asked instead.
+     */
+    private fun releaseFile(
+        app: CatalogApp,
+        tag: String,
+    ): Release? {
+        val base = "$WEB/${app.repo}/releases/download/$tag"
+        val text =
+            try {
+                get("$base/release.txt")
+            } catch (e: NotFoundException) {
+                return null
+            } catch (e: HttpException) {
+                return null
+            }
+        val notes = parseNotes(text)
+        val apk = notes["apk"]?.takeIf { it.endsWith(".apk") && '/' !in it } ?: return null
+        return Release(
+            tag = tag,
+            versionCode = notes["versionCode"]?.toLongOrNull() ?: 0,
+            versionName = notes["versionName"] ?: tag,
+            apkUrl = "$base/$apk",
+            apkName = apk,
+            size = notes["size"]?.toLongOrNull() ?: 0,
+            publishedAt = notes["date"] ?: "",
+            summary = notes[""] ?: "",
+            commit = notes["commit"] ?: "",
+        )
     }
 
     /** Numbered builds of [branch] (`build-<branch>-<versionCode>`, the last ones kept by the CI), newest first. */
@@ -61,6 +118,8 @@ object GitHub {
         base: String,
         head: String,
     ): List<String> {
+        val key = "${app.repo}/$base...$head"
+        synchronized(compared) { compared[key] }?.let { return it }
         val o = JSONObject(get("$API/repos/${app.repo}/compare/$base...$head"))
         val commits = o.optJSONArray("commits") ?: return emptyList()
         return List(commits.length()) { i ->
@@ -70,7 +129,7 @@ object GitHub {
                 .optString("message")
                 .lineSequence()
                 .first()
-        }.filterNot { it.startsWith("Merge branch") }.reversed()
+        }.filterNot { it.startsWith("Merge branch") }.reversed().also { synchronized(compared) { compared[key] = it } }
     }
 
     private fun releases(
@@ -127,15 +186,25 @@ object GitHub {
     }
 
     fun get(url: String): String {
+        val api = URL(url).host == "api.github.com"
+        if (api && limitedUntilS > System.currentTimeMillis() / 1000) throw RateLimitException(limitedUntilS)
+        val cached = if (api) synchronized(etags) { etags[url] } else null
         val c = open(url)
+        cached?.let { c.setRequestProperty("If-None-Match", it.first) }
         try {
             val code = c.responseCode
             if ((code == 403 || code == 429) && c.getHeaderField("X-RateLimit-Remaining") == "0") {
-                throw RateLimitException(c.getHeaderField("X-RateLimit-Reset")?.toLongOrNull() ?: 0)
+                val reset = c.getHeaderField("X-RateLimit-Reset")?.toLongOrNull() ?: 0
+                if (api) limitedUntilS = reset
+                throw RateLimitException(reset)
             }
+            if (code == 304 && cached != null) return cached.second
             if (code == 404) throw NotFoundException(url)
-            if (code !in 200..299) throw IOException("HTTP $code $url")
-            return c.inputStream.bufferedReader().use { it.readText() }
+            if (code !in 200..299) throw HttpException(code, url)
+            val body = c.inputStream.bufferedReader().use { it.readText() }
+            val etag = c.getHeaderField("ETag")
+            if (api && etag != null) synchronized(etags) { etags[url] = etag to body }
+            return body
         } finally {
             c.disconnect()
         }

@@ -75,7 +75,10 @@ jobs:
           else
             gh release create "$TAG" --title "$APP $NAME ($BRANCH)" --notes-file notes.txt --prerelease --verify-tag
           fi
-          gh release upload "$TAG" "$OUT" --clobber
+          # The same notes with the APK name and size, as a file of the release: LibreHU Apps reads it as a download,
+          # which does not count against the GitHub API limit (60 requests per hour without an account).
+          { printf 'apk=%s\nsize=%s\ndate=%s\n' "$OUT" "$(stat -c %s "$OUT")" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"; cat notes.txt; } > release.txt
+          gh release upload "$TAG" "$OUT" release.txt --clobber
           # Numbered copy of this build, so that LibreHU OTA can install an older version; the last 15 per branch kept.
           BTAG="build-$SLUG-$CODE"
           if ! gh release view "$BTAG" >/dev/null 2>&1; then

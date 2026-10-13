@@ -5,6 +5,8 @@ import android.net.Uri
 import org.json.JSONObject
 import org.librehu.ota.install.Installer
 import org.librehu.ota.install.Root
+import org.librehu.ota.install.RwMount
+import org.librehu.ota.install.SystemInstall
 import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
@@ -157,33 +159,33 @@ object Configs {
         if (!Regex("[0-7]{3,4}").matches(mode) || !Regex("[a-z0-9_]+(:[a-z0-9_]+)?").matches(owner)) return Outcome.Failed("mode")
         val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.ROOT).format(java.util.Date())
         val backup = "$BACKUP_DIR${dest.replace('/', '_')}.$stamp"
-        // Mount point of the destination (longest prefix in /proc/mounts), made writable unless dm-verity protects it.
+        // /system, /vendor and /product (and any other read-only partition) are written through a private read-write
+        // mount of their block device (RwMount), the file's SELinux label kept.
         val script =
             """
             d='$dest'
-            mp=${'$'}(awk '{print ${'$'}2}' /proc/mounts | while read m; do case "${'$'}d" in "${'$'}m"/*) echo "${'$'}{#m} ${'$'}m";; esac; done | sort -n | tail -n 1 | cut -d' ' -f2)
-            [ -n "${'$'}mp" ] || mp=/
-            dev=${'$'}(grep " ${'$'}mp " /proc/mounts | tail -n 1 | cut -d' ' -f1)
-            opts=${'$'}(grep " ${'$'}mp " /proc/mounts | tail -n 1 | cut -d' ' -f4)
-            if [ "${'$'}{opts#ro}" != "${'$'}opts" ]; then
-              case "${'$'}dev" in /dev/block/dm-*) echo "VERITY ${'$'}mp ${'$'}dev"; exit 3;; esac
-              blockdev --setrw "${'$'}dev" 2>/dev/null
-              mount -o rw,remount "${'$'}mp" || { echo "READONLY ${'$'}mp"; exit 4; }
-              wasro=1
-            fi
-            mkdir -p $BACKUP_DIR "${'$'}(dirname "${'$'}d")"
+            ${RwMount.LIB}
+            mkdir -p $BACKUP_DIR
+            ctx=${'$'}(ls -Zd "${'$'}d" 2>/dev/null | awk '{print ${'$'}1}')
+            [ -n "${'$'}ctx" ] || ctx=${'$'}(ls -Zd "${'$'}(dirname "${'$'}d")" 2>/dev/null | awk '{print ${'$'}1}')
             [ -f "${'$'}d" ] && cp -p "${'$'}d" '$backup'
-            cat > "${'$'}d.librehu" && mv -f "${'$'}d.librehu" "${'$'}d" && chmod $mode "${'$'}d" && chown $owner "${'$'}d"
+            direct=""
+            case "${'$'}d" in
+              /system/*|/vendor/*|/product/*) ;;
+              *) mkdir -p "${'$'}(dirname "${'$'}d")" 2>/dev/null; touch "${'$'}d.librehu" 2>/dev/null && rm -f "${'$'}d.librehu" && direct=1 ;;
+            esac
+            if [ -n "${'$'}direct" ]; then t="${'$'}d"; else rw_open "${'$'}d" || exit ${'$'}?; t="${'$'}RW"; fi
+            mkdir -p "${'$'}(dirname "${'$'}t")"
+            cat > "${'$'}t.librehu" && mv -f "${'$'}t.librehu" "${'$'}t" && chmod $mode "${'$'}t" && chown $owner "${'$'}t"
             e=${'$'}?
-            restorecon "${'$'}d" 2>/dev/null
-            [ -n "${'$'}wasro" ] && mount -o ro,remount "${'$'}mp" 2>/dev/null
+            case "${'$'}ctx" in u:object_r:*) chcon "${'$'}ctx" "${'$'}t" 2>/dev/null ;; *) restorecon "${'$'}t" 2>/dev/null ;; esac
+            rw_close
             exit ${'$'}e
             """.trimIndent()
         val out = Root.run(script, input) ?: return Outcome.Failed("su")
         return when (out.exit) {
             0 -> Outcome.Done(dest)
-            3 -> Outcome.Failed("verity: " + out.output.substringAfter("VERITY ").trim())
-            4 -> Outcome.Failed("read-only: " + out.output.substringAfter("READONLY ").trim())
+            2, 3, 4 -> Outcome.Failed(SystemInstall.readOnlyReason(out.output))
             else -> Outcome.Failed(out.output.lines().lastOrNull { it.isNotBlank() } ?: "exit ${out.exit}")
         }
     }

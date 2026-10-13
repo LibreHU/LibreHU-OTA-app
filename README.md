@@ -44,10 +44,14 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
     en lecture seule, et se retire depuis la liste des modules. Une ancienne copie ailleurs dans /system est masquée
     (`.replace`). KernelSU officiel 3.0 et plus ne monte les fichiers /system des modules qu'avec un **metamodule**
     (meta-overlayfs) ; KernelSU Next et Magisk les montent eux-mêmes.
-  - **Écrire dans /system** : remonte /system (ou `/` en system-as-root) en écriture, en levant au besoin la
-    protection en lecture seule du bloc ; laissé tel quel s'il s'agit d'un périphérique dm-verity (`/dev/block/dm-*`),
-    car écrire sous dm-verity empêche de démarrer. Si /system reste en lecture seule, l'appli l'indique (avec ses
-    points de montage) et propose le module. Pour retirer : supprimer son dossier et son fichier
+  - **Écrire dans /system** : `mount -o rw,remount` ne marche pas sur l'autoradio (system-as-root : / apparaît
+    comme `/dev/root`, un nœud qui n'existe pas, donc la protection en lecture seule qu'Android met sur le bloc ne
+    peut pas être levée par lui ; et avec Magisk, `/system/priv-app` peut être un tmpfs où l'écriture serait perdue).
+    Le vrai bloc (`by-name/system`) est donc monté une seconde fois dans un dossier privé, ce montage passé en
+    écriture, les fichiers écrits à travers lui, puis tout est remis en lecture seule ; le montage d'Android n'est
+    pas touché. Refusé si la partition est sous dm-verity (bloc esclave d'un `dm-*`), car écrire sous dm-verity
+    empêche de démarrer : l'appli l'indique avec la commande à lancer soi-même
+    (`fastboot --disable-verity flash vbmeta vbmeta.img`) et propose le module. Pour retirer : supprimer son dossier et son fichier
     `privapp-permissions`.
 - **Installations l'une après l'autre** : « Tout mettre à jour » télécharge en parallèle (2 par défaut) puis
   installe une appli à la fois (état « En attente »), LibreHU Apps elle-même en dernier (son processus se termine avec
@@ -77,8 +81,9 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
   - ou un **zip flashé par TWRP** : copié dans `/data/media/0/LibreHU/flash`, `install <zip>` écrit dans
     `/cache/recovery/openrecoveryscript`, puis redémarrage en recovery (TWRP l'exécute et redémarre).
 
-  Le fichier remplacé est d'abord copié dans `/sdcard/LibreHU/backup`. La partition est remontée en écriture le
-  temps de l'opération, **sauf si elle est protégée par dm-verity** (`/dev/block/dm-*`) : rien n'est écrit, car
+  Le fichier remplacé est d'abord copié dans `/sdcard/LibreHU/backup`, son label SELinux gardé. Une partition en
+  lecture seule (/system, /vendor, /jancar…) est écrite par le même montage privé que « Écrire dans /system »,
+  **sauf si elle est protégée par dm-verity** : rien n'est écrit, car
   l'autoradio ne démarrerait plus ; désactiver d'abord verity (`fastboot --disable-verity flash vbmeta vbmeta.img`).
 - **Onglet Zips** (root) : les zips flashables de
   [LibreHU-flashablesZips](https://github.com/LibreHU/LibreHU-flashablesZips), lus dans `index.json` de sa release
@@ -93,8 +98,14 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
     `/sdcard/LibreHU/backup`, image écrite puis relue et comparée (SHA-256).
   - **Annuler** : flashe le zip de restauration associé (caché de la liste).
   - URL de l'index modifiable dans Paramètres › GitHub (dépôt de test ou fork).
-- API GitHub sans compte : 60 requêtes par heure et par adresse IP ; une vérification en fait une par appli, la
-  liste des versions une, les changements d'une version une ou deux.
+- **Limite de l'API GitHub** (sans compte : 60 requêtes par heure et par adresse IP) : une vérification n'utilise
+  plus l'API. Chaque appli publie à côté de son APK un `release.txt` (version, commit, nom et taille de l'APK), lu
+  comme un simple téléchargement de release, qui ne compte pas dans ces 60 requêtes ; l'API ne sert plus qu'aux
+  compilations publiées avant ce fichier, à la liste des **Versions** et aux **changements** d'une version. Ses
+  réponses sont gardées avec leur ETag (une réponse inchangée revient en 304, non décomptée avec un jeton), les
+  comparaisons de commits sont gardées, et une fois la limite atteinte plus rien n'est demandé à l'API avant
+  l'heure de remise à zéro. Le catalogue (`raw.githubusercontent.com`) et l'index des Zips (release) ne passent pas
+  par l'API non plus. Un jeton personnel (Paramètres) porte la limite à 5000 requêtes par heure.
 
 ## Captures d'écran
 

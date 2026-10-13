@@ -169,6 +169,7 @@ object Zips {
                 [ -n "${'$'}part" ] || { echo "NOPART"; exit 3; }
                 psize=${'$'}(blockdev --getsize64 "${'$'}part")
                 [ $size -le "${'$'}psize" ] || { echo "TOOBIG ${'$'}psize"; exit 4; }
+                blockdev --setrw "${'$'}part" 2>/dev/null
                 mkdir -p $BACKUP_DIR && dd if="${'$'}part" of=$BACKUP_DIR/${z.partition}-$stamp.img bs=1048576 2>/dev/null || { echo "BACKUP"; exit 5; }
                 cat > "${'$'}part" && sync
                 w=${'$'}(head -c $size "${'$'}part" | sha256sum | cut -d' ' -f1)
