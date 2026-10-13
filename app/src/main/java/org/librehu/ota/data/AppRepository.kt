@@ -151,12 +151,19 @@ class AppRepository private constructor(
     /** No network at the last attempt: the list shown is the one kept from [lastCheck]. */
     val offline: StateFlow<Boolean> = _offline
 
-    /** Network usable now (validated when Android knows). */
-    fun online(): Boolean {
-        val cm = context.getSystemService(android.net.ConnectivityManager::class.java) ?: return true
-        val caps = cm.getNetworkCapabilities(cm.activeNetwork ?: return false) ?: return false
-        return caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
+    /** Network usable now; when Android does not tell (no permission, error), true: the request decides. */
+    fun online(): Boolean =
+        try {
+            val cm = context.getSystemService(android.net.ConnectivityManager::class.java)
+            val net = cm?.activeNetwork
+            when {
+                cm == null -> true
+                net == null -> false
+                else -> cm.getNetworkCapabilities(net)?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false
+            }
+        } catch (_: Exception) {
+            true
+        }
 
     /** At start: always a check when there is network, else the kept list (no failed request, no waiting). */
     fun checkIfOnline() {
