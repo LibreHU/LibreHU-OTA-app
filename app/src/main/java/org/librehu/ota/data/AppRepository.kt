@@ -631,9 +631,13 @@ class AppRepository private constructor(
         val system = flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM != 0
         val updated = flags and android.content.pm.ApplicationInfo.FLAG_UPDATED_SYSTEM_APP != 0
         // The /system copy hidden by an update in /data.
-        val factory =
+        val factory: PackageInfo? =
             if (updated) {
-                runCatching { context.packageManager.getPackageInfo(app.packageName, PackageManager.MATCH_FACTORY_ONLY) }.getOrNull()
+                try {
+                    context.packageManager.getPackageInfo(app.packageName, PackageManager.MATCH_FACTORY_ONLY)
+                } catch (_: PackageManager.NameNotFoundException) {
+                    null
+                }
             } else {
                 null
             }
