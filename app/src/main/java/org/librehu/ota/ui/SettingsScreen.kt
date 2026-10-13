@@ -189,6 +189,18 @@ fun SettingsScreen() {
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(stringResource(R.string.set_token_hint), color = CarColors.TextDim, fontSize = 14.sp)
+                var zipsUrl by remember { mutableStateOf(s.zipsIndexUrl) }
+                OutlinedTextField(
+                    value = zipsUrl,
+                    onValueChange = { v ->
+                        zipsUrl = v.trim()
+                        set { it.copy(zipsIndexUrl = zipsUrl) }
+                    },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.set_zips_index)) },
+                    placeholder = { Text(org.librehu.ota.data.Zips.INDEX_URL, fontSize = 12.sp) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
         item {

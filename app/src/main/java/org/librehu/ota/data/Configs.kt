@@ -188,7 +188,8 @@ object Configs {
         }
     }
 
-    private fun flash(
+    /** Zip [input] put in the internal storage as [name], TWRP's OpenRecoveryScript told to install it. */
+    internal fun flash(
         input: InputStream,
         name: String,
     ): Outcome {

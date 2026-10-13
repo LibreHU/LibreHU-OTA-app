@@ -61,6 +61,8 @@ data class OtaSettings(
     val systemWay: SystemWay = SystemWay.AUTO,
     /** Also installed in /data: the new version runs at once, /system has it after the reboot. */
     val systemAlsoData: Boolean = true,
+    /** index.json of the flashable zips; empty = LibreHU's repository. */
+    val zipsIndexUrl: String = "",
 ) {
     companion object {
         val INTERVALS = listOf(6, 12, 24, 48, 168)
@@ -106,6 +108,7 @@ object OtaSettingsStore {
             .putString("system_scope", s.systemScope.name)
             .putString("system_way", s.systemWay.name)
             .putBoolean("system_also_data", s.systemAlsoData)
+            .putString("zips_index", s.zipsIndexUrl)
             .apply()
     }
 
@@ -132,6 +135,7 @@ object OtaSettingsStore {
                 systemScope = SystemScope.entries.firstOrNull { it.name == p.getString("system_scope", null) } ?: d.systemScope,
                 systemWay = SystemWay.entries.firstOrNull { it.name == p.getString("system_way", null) } ?: d.systemWay,
                 systemAlsoData = p.getBoolean("system_also_data", d.systemAlsoData),
+                zipsIndexUrl = p.getString("zips_index", "").orEmpty(),
             )
         GitHub.token = state.value.githubToken
     }

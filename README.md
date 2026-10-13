@@ -80,6 +80,19 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
   Le fichier remplacé est d'abord copié dans `/sdcard/LibreHU/backup`. La partition est remontée en écriture le
   temps de l'opération, **sauf si elle est protégée par dm-verity** (`/dev/block/dm-*`) : rien n'est écrit, car
   l'autoradio ne démarrerait plus ; désactiver d'abord verity (`fastboot --disable-verity flash vbmeta vbmeta.img`).
+- **Onglet Zips** (root) : les zips flashables de
+  [LibreHU-flashablesZips](https://github.com/LibreHU/LibreHU-flashablesZips), lus dans `index.json` de sa release
+  `zips` (copie gardée pour le hors-ligne), **classés par catégorie** (Recovery, Pilotes, Tweaks, Mises à jour,
+  Noyau… : celles de `categories.json` du dépôt, filtres en haut de l'onglet). Pour chaque zip : version, taille,
+  description, avertissement, licence et source ; incompatible si `ro.product.device` n'est pas dans ses `devices`.
+  - **Flasher avec TWRP** : téléchargé, SHA-256 vérifié, puis même chemin que l'onglet Configs (OpenRecoveryScript
+    et redémarrage en recovery). Le zip refuse lui-même un autre appareil et s'arrête sans rien écrire si la
+    partition qu'il modifie est sous dm-verity actif.
+  - **Écrire dans `<partition>` maintenant** (zips accompagnés d'une image, TWRP par exemple) : sans passer par la
+    recovery ; partition trouvée dans `by-name`, taille vérifiée, partition actuelle copiée dans
+    `/sdcard/LibreHU/backup`, image écrite puis relue et comparée (SHA-256).
+  - **Annuler** : flashe le zip de restauration associé (caché de la liste).
+  - URL de l'index modifiable dans Paramètres › GitHub (dépôt de test ou fork).
 - API GitHub sans compte : 60 requêtes par heure et par adresse IP ; une vérification en fait une par appli, la
   liste des versions une, les changements d'une version une ou deux.
 

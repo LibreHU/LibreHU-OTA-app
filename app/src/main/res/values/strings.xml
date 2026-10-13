@@ -141,4 +141,17 @@
     <string name="set_system_way_direct">Written in /system</string>
     <string name="set_system_data">Also in /data (runs at once)</string>
     <string name="set_system_data_hint">The new version runs without waiting for the reboot; /system has it from the next start (same signing key needed).</string>
+    <string name="tab_zips">Zips</string>
+    <string name="zips_hint">Flashable zips of LibreHU-flashablesZips, by category. Flashed by TWRP at the next start in recovery (TWRP needed: Recovery category); an image can also be written straight to its partition. Root.</string>
+    <string name="zips_error">Index not received: %1$s</string>
+    <string name="zips_all">All</string>
+    <string name="zips_empty">No zip in this category.</string>
+    <string name="zips_incompatible">Not for this device (%1$s; made for %2$s).</string>
+    <string name="zips_flash">Flash with TWRP</string>
+    <string name="zips_write_image">Write to %1$s now</string>
+    <string name="zips_restore">Undo (restore zip)</string>
+    <string name="zips_confirm_flash">The zip is downloaded and checked (SHA-256), put in the internal storage, and TWRP will flash it at the next start in recovery. Continue?</string>
+    <string name="zips_confirm_image">The image is downloaded and checked, the current %1$s partition is copied to /sdcard/LibreHU/backup, then the image is written and read back. Continue?</string>
+    <string name="zips_image_done">Written: %1$s</string>
+    <string name="set_zips_index">Zips index (empty = LibreHU)</string>
 </resources>
