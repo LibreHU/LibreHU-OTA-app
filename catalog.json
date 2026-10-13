@@ -110,6 +110,17 @@
       "tagged": false
     },
     {
+      "id": "headunit",
+      "name": "Android Auto (Open Headunit LibreHU)",
+      "repo": "Dok-T/LibreHU-open-headunit-app",
+      "package": "org.librehu.headunit",
+      "description": "",
+      "branches": [
+        "main"
+      ],
+      "tagged": false
+    },
+    {
       "id": "ota",
       "name": "LibreHU Apps (OTA)",
       "repo": "LibreHU/LibreHU-OTA-app",
