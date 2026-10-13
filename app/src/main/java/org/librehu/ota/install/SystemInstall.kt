@@ -206,9 +206,92 @@ object SystemInstall {
         return when {
             out.exit == 0 -> InstallResult.RebootNeeded
             out.exit == READ_ONLY_EXIT -> InstallResult.ReadOnly(readOnlyReason(out.output))
+            // Mounted read-write, but the blocks are refused: the eMMC controller's write-protected regions (stock
+            // kernel, msdc "write protect region", lifted only outside the normal boot). TWRP writes it.
+            IO_ERROR.containsMatchIn(out.output) -> InstallResult.ReadOnly(WRITE_PROTECTED)
             else -> InstallResult.Failed(out.output.ifEmpty { "exit ${out.exit}" })
         }
     }
+
+    /**
+     * Zip for TWRP doing what [installDirect] does, from the recovery (where the partition is writable): the APK in
+     * /system/priv-app/<pkg> or /system/app/<pkg>, its privileged permissions whitelisted, the previous copy removed.
+     * Flashed through OpenRecoveryScript ([org.librehu.ota.data.Configs.flash]) then a reboot into the recovery.
+     */
+    fun recoveryZip(
+        context: Context,
+        apk: File,
+        pkg: String,
+        privApp: Boolean,
+        plan: Plan,
+    ): File {
+        val rel = "${if (privApp) "priv-app" else "app"}/$pkg"
+        val old =
+            plan.current
+                ?.trimEnd('/')
+                ?.takeIf { it != "/system/$rel" && it.startsWith("/system/") && Regex("[A-Za-z0-9_./-]+").matches(it) }
+                ?.removePrefix("/system/")
+                .orEmpty()
+        val perms = privApp && plan.privileged.isNotEmpty()
+        val zip = File(context.cacheDir, "apk/librehu-system-$pkg.zip")
+        zip.parentFile?.mkdirs()
+        ZipOutputStream(zip.outputStream()).use { z ->
+            fun text(
+                path: String,
+                content: String,
+            ) {
+                z.putNextEntry(ZipEntry(path))
+                z.write(content.toByteArray())
+                z.closeEntry()
+            }
+            text("META-INF/com/google/android/update-binary", recoveryScript(pkg, rel, old, perms))
+            text("META-INF/com/google/android/updater-script", "# LibreHU Apps\n")
+            z.putNextEntry(ZipEntry("base.apk"))
+            apk.inputStream().use { it.copyTo(z) }
+            z.closeEntry()
+            if (perms) text("perms.xml", whitelist(pkg, plan.privileged))
+        }
+        return zip
+    }
+
+    /** TWRP installer of [recoveryZip]: mounts the system partition read-write (system-as-root) and writes the files. */
+    private fun recoveryScript(
+        pkg: String,
+        rel: String,
+        old: String,
+        perms: Boolean,
+    ) = """
+        #!/sbin/sh
+        # LibreHU Apps: $pkg in /system/$rel
+        OUTFD=${'$'}2; ZIP=${'$'}3
+        ui() { echo "ui_print ${'$'}1" > /proc/self/fd/${'$'}OUTFD; echo "ui_print" > /proc/self/fd/${'$'}OUTFD; }
+        fail() { ui "ERREUR : ${'$'}1"; umount /librehu_system 2>/dev/null; exit 1; }
+        ui "LibreHU Apps : $pkg -> /system/$rel"
+        DEV=""
+        for d in /dev/block/platform/bootdevice/by-name/system /dev/block/by-name/system /dev/block/platform/*/by-name/system; do
+          [ -e "${'$'}d" ] && DEV=${'$'}d && break
+        done
+        [ -n "${'$'}DEV" ] || fail "partition system introuvable"
+        umount /system_root 2>/dev/null; umount /system 2>/dev/null
+        mkdir -p /librehu_system
+        blockdev --setrw "${'$'}DEV" 2>/dev/null
+        mount -t ext4 -o rw "${'$'}DEV" /librehu_system || fail "montage de system en ecriture impossible"
+        S=/librehu_system/system; [ -f ${'$'}S/build.prop ] || S=/librehu_system
+        [ -f ${'$'}S/build.prop ] || fail "build.prop absent de la partition system"
+        T=/tmp/librehu_sys; rm -rf ${'$'}T; mkdir -p ${'$'}T
+        unzip -o -q "${'$'}ZIP" base.apk perms.xml -d ${'$'}T 2>/dev/null; [ -f ${'$'}T/base.apk ] || fail "APK absent du zip"
+        [ -n "$old" ] && rm -rf "${'$'}S/$old" && ui "ancienne copie /system/$old retiree"
+        rm -rf "${'$'}S/$rel"; mkdir -p "${'$'}S/$rel" || fail "dossier impossible (system plein ?)"
+        cp ${'$'}T/base.apk "${'$'}S/$rel/$pkg.apk" || fail "copie impossible (system plein ?)"
+        chmod 755 "${'$'}S/$rel"; chmod 644 "${'$'}S/$rel/$pkg.apk"; chown -R 0:0 "${'$'}S/$rel"
+        X="${'$'}S/etc/permissions/privapp-permissions-$pkg.xml"
+        if [ "${if (perms) 1 else 0}" = 1 ]; then cp ${'$'}T/perms.xml "${'$'}X" && chmod 644 "${'$'}X" && chown 0:0 "${'$'}X"; else rm -f "${'$'}X"; fi
+        chcon -R u:object_r:system_file:s0 "${'$'}S/$rel" 2>/dev/null; chcon u:object_r:system_file:s0 "${'$'}X" 2>/dev/null
+        cmp -s ${'$'}T/base.apk "${'$'}S/$rel/$pkg.apk" || fail "verification de l'APK echouee"
+        sync; umount /librehu_system; rm -rf ${'$'}T
+        ui "Termine : actif au demarrage d'Android."
+        exit 0
+        """.trimIndent() + "\n"
 
     private fun whitelist(
         pkg: String,
@@ -255,6 +338,11 @@ object SystemInstall {
     }
 
     private const val READ_ONLY_EXIT = 30
+
+    /** Reason given when the blocks of a mounted read-write partition are refused (see [installDirect]). */
+    const val WRITE_PROTECTED = "write-protected"
+
+    private val IO_ERROR = Regex("I/O error|Input/output error|EIO", RegexOption.IGNORE_CASE)
 
     /** Why [RwMount] could not open the partition, with what to do under dm-verity. */
     internal fun readOnlyReason(output: String): String {

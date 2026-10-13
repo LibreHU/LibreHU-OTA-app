@@ -208,4 +208,6 @@
     <string name="set_about_catalog">Catalogue</string>
     <string name="set_about_zips">Index des zips</string>
     <string name="set_about_hint">LibreHU Apps installe et met à jour les applis LibreHU depuis leurs releases GitHub, et flashe les zips LibreHU.</string>
+    <string name="system_twrp">Par TWRP (redémarre en recovery maintenant)</string>
+    <string name="system_write_protected">Android ne peut pas écrire /system sur cet autoradio : l\'eMMC refuse les écritures en démarrage normal (erreur d\'E/S, zones protégées du noyau stock). Installer par TWRP : LibreHU Apps prépare un zip, redémarre en recovery, TWRP l\'écrit puis relance Android.</string>
 </resources>

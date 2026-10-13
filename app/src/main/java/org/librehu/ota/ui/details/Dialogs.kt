@@ -44,6 +44,7 @@ import org.librehu.ota.data.AppRepository
 import org.librehu.ota.data.AppState
 import org.librehu.ota.data.Task
 import org.librehu.ota.install.Root
+import org.librehu.ota.install.SystemInstall
 import org.librehu.ota.ui.CarColors
 import org.librehu.ota.ui.components.ErrorColor
 import org.librehu.ota.ui.components.Hint
@@ -139,7 +140,16 @@ private fun SystemDialog(
         title = { Text(stringResource(R.string.system_title, s.app.name)) },
         text = {
             Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                plan.readOnly?.let { Text(stringResource(R.string.system_read_only, it), color = ErrorColor) }
+                plan.readOnly?.let {
+                    Text(
+                        if (it == SystemInstall.WRITE_PROTECTED) {
+                            stringResource(R.string.system_write_protected)
+                        } else {
+                            stringResource(R.string.system_read_only, it)
+                        },
+                        color = ErrorColor,
+                    )
+                }
                 Text(stringResource(R.string.system_text))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     for (p in listOf(true, false)) {
@@ -166,6 +176,9 @@ private fun SystemDialog(
                     TextButton(onClick = { repo.installSystem(pkg, privApp, module = true) }) {
                         Text(stringResource(R.string.system_as_module, m.label) + " · $best")
                     }
+                }
+                TextButton(onClick = { repo.installSystemRecovery(pkg, privApp) }) {
+                    Text(stringResource(R.string.system_twrp) + if (plan.manager == null) " · $best" else "")
                 }
                 if (plan.readOnly == null) {
                     TextButton(onClick = { repo.installSystem(pkg, privApp, module = false) }) { Text(stringResource(R.string.system_write)) }

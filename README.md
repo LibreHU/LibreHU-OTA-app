@@ -68,6 +68,11 @@ installation (`install/`) n'ont pas changé.
     en lecture seule, et se retire depuis la liste des modules. Une ancienne copie ailleurs dans /system est masquée
     (`.replace`). KernelSU officiel 3.0 et plus ne monte les fichiers /system des modules qu'avec un **metamodule**
     (meta-overlayfs) ; KernelSU Next et Magisk les montent eux-mêmes.
+  - **Par TWRP** (recommandé sur l'UJC201 sans gestionnaire root à modules) : en démarrage normal, le noyau stock
+    protège des zones de l'eMMC en écriture (pilote MSDC propriétaire : `write protect region`, `hw write protect
+    violation`) ; l'écriture directe dans /system finit donc en **erreur d'E/S** même une fois la partition montée en
+    écriture. LibreHU Apps prépare alors un petit zip (APK, liste blanche des permissions, ancienne copie retirée),
+    l'inscrit dans OpenRecoveryScript et redémarre en recovery : TWRP l'écrit, vérifie l'APK et relance Android.
   - **Écrire dans /system** : `mount -o rw,remount` ne marche pas sur l'autoradio (system-as-root : / apparaît
     comme `/dev/root`, un nœud qui n'existe pas, donc la protection en lecture seule qu'Android met sur le bloc ne
     peut pas être levée par lui ; et avec Magisk, `/system/priv-app` peut être un tmpfs où l'écriture serait perdue).

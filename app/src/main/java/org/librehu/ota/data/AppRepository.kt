@@ -387,6 +387,39 @@ class AppRepository private constructor(
         }
     }
 
+    /**
+     * After [Task.SystemChoice]: the same install done by TWRP (the eMMC refuses writes to /system in the normal boot):
+     * a zip for the recovery, OpenRecoveryScript told to flash it, then a reboot into the recovery.
+     */
+    fun installSystemRecovery(
+        pkg: String,
+        privApp: Boolean,
+    ) {
+        val s = _apps.value.firstOrNull { it.app.packageName == pkg } ?: return
+        val task = s.task as? Task.SystemChoice ?: return
+        scope.launch {
+            setTask(pkg, Task.Installing)
+            val outcome =
+                runCatching {
+                    val zip = SystemInstall.recoveryZip(context, task.apk, pkg, privApp, task.plan)
+                    try {
+                        zip.inputStream().use { Configs.flash(it, zip.name) }
+                    } finally {
+                        zip.delete()
+                    }
+                }.getOrElse { Configs.Outcome.Failed(it.message ?: it.javaClass.simpleName) }
+            if (outcome is Configs.Outcome.Done) {
+                History.add(context, s.app.name, "/system (TWRP)", true, outcome.detail)
+                setTask(pkg, Task.RebootNeeded)
+                Configs.rebootRecovery()
+            } else {
+                val reason = (outcome as Configs.Outcome.Failed).reason
+                History.add(context, s.app.name, "/system (TWRP)", false, reason)
+                setTask(pkg, Task.Failed(reason))
+            }
+        }
+    }
+
     private suspend fun choose(
         pkg: String,
         apk: File,

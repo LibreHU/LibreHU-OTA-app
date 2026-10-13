@@ -208,4 +208,6 @@
     <string name="set_about_catalog">Catalogue</string>
     <string name="set_about_zips">Zips index</string>
     <string name="set_about_hint">LibreHU Apps installs and updates the LibreHU apps from their GitHub releases, and flashes the LibreHU zips.</string>
+    <string name="system_twrp">With TWRP (restarts into the recovery now)</string>
+    <string name="system_write_protected">Android cannot write /system on this unit: the eMMC refuses the writes in a normal start (I/O error, write-protected regions of the stock kernel). Install it with TWRP: LibreHU Apps prepares a zip, restarts into the recovery, TWRP writes it and starts Android again.</string>
 </resources>
