@@ -338,8 +338,19 @@
     ],
     [
      "tap",
-     "^Versions$",
-     1
+     "^LibreHU Apps \\(OTA\\)$"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "shot",
+     "details"
+    ],
+    [
+     "tap",
+     "^Voir les versions$"
     ],
     [
      "wait",
@@ -348,9 +359,6 @@
     [
      "shot",
      "versions"
-    ],
-    [
-     "back"
     ],
     [
      "tap",
@@ -363,6 +371,60 @@
     [
      "shot",
      "logs"
+    ],
+    [
+     "back"
+    ],
+    [
+     "back"
+    ],
+    [
+     "tap",
+     "^Mises à jour$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "updates"
+    ],
+    [
+     "tap",
+     "^Zips$"
+    ],
+    [
+     "wait",
+     5
+    ],
+    [
+     "shot",
+     "zips"
+    ],
+    [
+     "tap",
+     "^Téléchargements$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "downloads"
+    ],
+    [
+     "tap",
+     "^Réglages$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "settings"
     ]
    ],
    "grant": [

@@ -4,6 +4,28 @@ Gestionnaire des applis LibreHU pour autoradios Jancar / Autochips AC8257 (UJC20
 version installée à la dernière publiée sur GitHub, installe et met à jour. Thème clair / sombre et couleur d'accent
 de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
 
+## Interface
+
+Organisée comme [Aurora Store](https://github.com/whyorean/AuroraStore) (GPL-3.0, client libre du Play Store), adaptée à
+l'écran paysage de l'autoradio : une **barre de navigation à gauche** et une barre de titre (état de la dernière
+vérification, bouton Vérifier).
+
+| Page | Contenu |
+|---|---|
+| **Applis** | tuiles en deux sections, *Installées* puis *À installer* : icône, version, pastille d'état (À jour, Mise à jour, Non installée, Téléchargement…), action principale (Installer / Mettre à jour / Ouvrir, ou anneau de progression avec pause et annulation) ; toucher une tuile ouvre sa fiche |
+| **Mises à jour** (badge : leur nombre) | nombre et **Tout mettre à jour**, une ligne par appli (versions avant → après, taille, date, nouveautés dépliables avec les commits), les mises à jour ignorées à part |
+| **Fiche d'une appli** | en-tête (icône, paquet, dépôt, état), actions (Ouvrir, Réinstaller, Journal, Installer dans /system, Ne pas mettre à jour), avancement, versions dans /data et /system, version GitHub, branche, date, taille, nouveautés et commits, **toutes les versions** (chargées à la demande : une requête GitHub) à installer, revenir à une plus ancienne ou mettre dans /system |
+| **Zips** | deux onglets : *Zips flashables* et *Fichiers de configuration* |
+| **Téléchargements** (badge : ceux en cours) | en cours ou en pause (avancement, débit, temps restant, pause / reprise / annulation), terminés ou en échec, puis l'**historique** |
+| **Réglages** | sections Général (édition, root), Vérifications, Installation, /system, Sources (jeton GitHub, index des zips), Stockage, À propos |
+
+Les choix qu'une installation attend (autre signature, version plus ancienne, emplacement dans /system) s'ouvrent
+quelle que soit la page affichée. Le code de l'interface est rangé par page (`ui/apps`, `ui/updates`, `ui/details`,
+`ui/downloads`, `ui/zips`, `ui/settings`, composants communs dans `ui/components`) ; les couches données (`data/`) et
+installation (`install/`) n'ont pas changé.
+
+## Fonctions
+
 - **Catalogue** : [catalog.json](catalog.json) de ce dépôt (téléchargé à chaque vérification), avec une copie
   intégrée à l'appli quand GitHub n'est pas joignable. Pour ajouter une appli : une entrée dans ce fichier. Il
   comprend les forks LibreHU d'Open Headunit (« Android Auto », `LibreHU/LibreHU-open-headunit-app`) et de
@@ -21,13 +43,13 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
   aléatoire : la première installation par LibreHU Apps propose de **désinstaller puis installer** (réglages perdus),
   ou, pour une appli installée dans `/system` (privilégiée), de **la remplacer dans /system** en root (données
   gardées, redémarrage nécessaire).
-- **Versions** (bouton sur chaque appli) : les compilations gardées de l'édition, avec date et dernier commit ;
+- **Versions** (fiche de l'appli) : les compilations gardées de l'édition, avec date et dernier commit ;
   en choisir une affiche les commits ajoutés depuis la version installée (ou retirés en revenant en arrière, via
   l'API « compare » de GitHub), puis l'installe. **Revenir à une version plus ancienne** : Android refuse
   d'installer un `versionCode` plus petit par-dessus (sauf appli ou ROM debuggable) ; LibreHU Apps propose alors de
   désinstaller puis installer (réglages perdus) ou, en root, de garder les données (`pm uninstall -k`, risqué si la
   version récente a changé le format de ses réglages).
-- **Journal** (bouton sur chaque appli installée) : les dernières lignes du logcat de l'appli (ses processus, par
+- **Journal** (fiche d'une appli installée) : les dernières lignes du logcat de l'appli (ses processus, par
   identifiant Android, et ses plantages), actualisables et enregistrables dans un fichier. Il faut le root, ou
   accorder une fois la permission depuis un ordinateur puis rouvrir l'appli :
 
@@ -55,10 +77,9 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
     empêche de démarrer : l'appli l'indique avec la commande à lancer soi-même
     (`fastboot --disable-verity flash vbmeta vbmeta.img`) et propose le module. Pour retirer : supprimer son dossier et son fichier
     `privapp-permissions`.
-- **Téléchargements** : débit (lissé sur ~2 s), quantité reçue / taille, pourcentage et **temps restant** sous la
-  barre de chaque appli ; **pause / reprise** (le morceau reçu est gardé, reprise par requête HTTP `Range` avec
+- **Téléchargements** : débit (lissé sur ~2 s), quantité reçue / taille, pourcentage et **temps restant** sur la tuile, la ligne de mise à jour, la fiche et la page Téléchargements ; **pause / reprise** (le morceau reçu est gardé, reprise par requête HTTP `Range` avec
   `If-Range` sur l'ETag : un fichier remplacé sur GitHub repart de zéro ; taille vérifiée à la fin) et annulation.
-- **Notifications** (Paramètres, activées par défaut) : une par appli pendant le téléchargement (progression, débit,
+- **Notifications** (Réglages, activées par défaut) : une par appli pendant le téléchargement (progression, débit,
   temps restant, boutons Pause / Annuler, puis Reprendre), l'installation, puis « Installé » ou l'échec ; aussi pour
   les installations de la vérification en arrière-plan. Tant que quelque chose tourne, un service au premier plan
   (résumé : nombre d'applis, progression totale) garde LibreHU Apps en vie jusqu'à la fin.
@@ -70,22 +91,22 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
   installe une appli à la fois (état « En attente »), LibreHU Apps elle-même en dernier (son processus se termine avec
   sa propre installation). Lancer plusieurs installations en même temps faisait échouer les suivantes ou fermer
   l'appli.
-- **Ne pas mettre à jour** (bouton sur chaque appli) : l'appli est exclue de « Tout mettre à jour », des
+- **Ne pas mettre à jour** (fiche de l'appli ; liste dans Réglages › Installation, retirable aussi depuis Mises à jour) : l'appli est exclue de « Tout mettre à jour », des
   notifications et de l'installation en arrière-plan.
-- **Onglet Paramètres** : vérification en arrière-plan (activée, toutes les 6 h / 12 h / 1 j / 2 j / 7 j, Wi-Fi
+- **Réglages** : vérification en arrière-plan (activée, toutes les 6 h / 12 h / 1 j / 2 j / 7 j, Wi-Fi
   seulement, notification, **installation automatique** en root), méthode d'installation (automatique / root
   seulement / installateur Android), compilation après installation (speed-profile, une appli à la fois),
   téléchargements simultanés, garder ou supprimer les APK téléchargés, **jeton GitHub** facultatif (5000 requêtes
   par heure au lieu de 60, envoyé seulement à api.github.com), **historique** des installations, configurations et
-  flashs (date, versions avant → après, résultat).
-- **Mise à jour automatique dans /system** (Paramètres, root, désactivée par défaut) : les mises à jour (manuelles,
+  flashs (date, versions avant → après, résultat) dans la page Téléchargements.
+- **Mise à jour automatique dans /system** (Réglages, root, désactivée par défaut) : les mises à jour (manuelles,
   « Tout mettre à jour », arrière-plan) vont dans `/system/priv-app` ou `/system/app` selon le besoin de l'appli,
   pour les applis déjà dans /system ou pour toutes ; par module root, par écriture dans /system, ou automatique
   (module si le gestionnaire root le monte, sinon écriture, et module en secours si /system reste en lecture seule).
   Option « aussi dans /data » (activée) : la nouvelle version tourne tout de suite, /system l'a au démarrage suivant.
   Si /system refuse, l'installation normale dans /data se fait à la place (noté dans l'historique). LibreHU Apps
   elle-même reste dans /data.
-- **Onglet Configs** (root) : fichiers de configuration (politique audio, effets, config de la box CAN, config
+- **Zips › Fichiers de configuration** (root) : fichiers de configuration (politique audio, effets, config de la box CAN, config
   Jancar…) et **zips recovery** :
   - du catalogue (`configs` de [catalog.json](catalog.json)) :
     `{"id", "name", "description", "type": "FILE" | "RECOVERY_ZIP", "url", "dest", "mode", "owner", "sha256", "reboot"}` ;
@@ -98,19 +119,19 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
   lecture seule (/system, /vendor, /jancar…) est écrite par le même montage privé que « Écrire dans /system »,
   **sauf si elle est protégée par dm-verity** : rien n'est écrit, car
   l'autoradio ne démarrerait plus ; désactiver d'abord verity (`fastboot --disable-verity flash vbmeta vbmeta.img`).
-- **Onglet Zips** (root) : les zips flashables de
+- **Zips › Zips flashables** (root) : les zips flashables de
   [LibreHU-flashablesZips](https://github.com/LibreHU/LibreHU-flashablesZips), lus dans `index.json` de sa release
   `zips` (copie gardée pour le hors-ligne), **classés par catégorie** (Recovery, Pilotes, Tweaks, Mises à jour,
-  Noyau… : celles de `categories.json` du dépôt, filtres en haut de l'onglet). Pour chaque zip : version, taille,
+  Noyau… : celles de `categories.json` du dépôt, filtres en haut de la liste). Pour chaque zip : version, taille,
   description, avertissement, licence et source ; incompatible si `ro.product.device` n'est pas dans ses `devices`.
-  - **Flasher avec TWRP** : téléchargé, SHA-256 vérifié, puis même chemin que l'onglet Configs (OpenRecoveryScript
+  - **Flasher avec TWRP** : téléchargé, SHA-256 vérifié, puis même chemin que les fichiers de configuration (OpenRecoveryScript
     et redémarrage en recovery). Le zip refuse lui-même un autre appareil et s'arrête sans rien écrire si la
     partition qu'il modifie est sous dm-verity actif.
   - **Écrire dans `<partition>` maintenant** (zips accompagnés d'une image, TWRP par exemple) : sans passer par la
     recovery ; partition trouvée dans `by-name`, taille vérifiée, partition actuelle copiée dans
     `/sdcard/LibreHU/backup`, image écrite puis relue et comparée (SHA-256).
   - **Annuler** : flashe le zip de restauration associé (caché de la liste).
-  - URL de l'index modifiable dans Paramètres › GitHub (dépôt de test ou fork).
+  - URL de l'index modifiable dans Réglages › Sources (dépôt de test ou fork).
 - **Limite de l'API GitHub** (sans compte : 60 requêtes par heure et par adresse IP) : une vérification n'utilise
   plus l'API. Chaque appli publie à côté de son APK un `release.txt` (version, commit, nom et taille de l'APK), lu
   comme un simple téléchargement de release, qui ne compte pas dans ces 60 requêtes ; l'API ne sert plus qu'aux
@@ -118,14 +139,16 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
   réponses sont gardées avec leur ETag (une réponse inchangée revient en 304, non décomptée avec un jeton), les
   comparaisons de commits sont gardées, et une fois la limite atteinte plus rien n'est demandé à l'API avant
   l'heure de remise à zéro. Le catalogue (`raw.githubusercontent.com`) et l'index des Zips (release) ne passent pas
-  par l'API non plus. Un jeton personnel (Paramètres) porte la limite à 5000 requêtes par heure.
+  par l'API non plus. Un jeton personnel (Réglages › Sources) porte la limite à 5000 requêtes par heure.
 
 ## Captures d'écran
 
 | | |
 |---|---|
-| ![Applis](docs/screenshots/apps.png)<br>Applis | ![Versions](docs/screenshots/versions.png)<br>Versions |
-| ![Journal](docs/screenshots/logs.png)<br>Journal |  |
+| ![Applis](docs/screenshots/apps.png)<br>Applis | ![Fiche](docs/screenshots/details.png)<br>Fiche d'une appli |
+| ![Versions](docs/screenshots/versions.png)<br>Versions | ![Journal](docs/screenshots/logs.png)<br>Journal |
+| ![Mises à jour](docs/screenshots/updates.png)<br>Mises à jour | ![Zips](docs/screenshots/zips.png)<br>Zips |
+| ![Téléchargements](docs/screenshots/downloads.png)<br>Téléchargements | ![Réglages](docs/screenshots/settings.png)<br>Réglages |
 
 Captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans autoradio branché : les valeurs du véhicule et de la MCU sont vides. Refaites-les avec l'action **Screenshots** de [LibreHU-OTA-app](https://github.com/LibreHU/LibreHU-OTA-app/tree/main/screenshots).
 
