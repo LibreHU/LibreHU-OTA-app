@@ -32,6 +32,12 @@ data class AppState(
     val installedCode: Long? = null,
     val installedName: String? = null,
     val systemApp: Boolean = false,
+    /** Copy in /system (the factory one, also when an update in /data hides it), null when there is none. */
+    val systemCode: Long? = null,
+    val systemName: String? = null,
+    /** Copy in /data (an app installed there, or the update of a system app), null when there is none. */
+    val dataCode: Long? = null,
+    val dataName: String? = null,
     val release: Release? = null,
     val checkError: String? = null,
     val task: Task = Task.Idle,
@@ -52,7 +58,23 @@ sealed class Task {
 
     data class Downloading(
         val progress: Float,
+        val done: Long = 0,
+        /** -1 when the server gives no size. */
+        val total: Long = -1,
+        /** Bytes per second (smoothed). */
+        val speed: Long = 0,
+        /** Seconds left, -1 when unknown. */
+        val etaS: Long = -1,
     ) : Task()
+
+    /** Download paused: [done] bytes kept, resumed from there. */
+    data class Paused(
+        val release: Release,
+        val done: Long,
+        val total: Long,
+    ) : Task() {
+        val progress get() = if (total > 0) done.toFloat() / total else -1f
+    }
 
     /** Downloaded, waiting for the installs before it (one at a time). */
     data object Queued : Task()
@@ -99,6 +121,11 @@ class AppRepository private constructor(
     private val installing = Mutex()
     private val downloads = kotlinx.coroutines.sync.Semaphore(OtaSettingsStore.value(context).parallelDownloads.coerceIn(1, 4))
 
+    /** Downloads asked to pause. */
+    private val pauses =
+        java.util.concurrent.ConcurrentHashMap
+            .newKeySet<String>()
+
     /** Version name each running install goes to (history). */
     private val targets = java.util.concurrent.ConcurrentHashMap<String, String>()
 
@@ -117,6 +144,16 @@ class AppRepository private constructor(
     val editionFlow: StateFlow<Edition> = editionState
 
     val lastCheck: Long get() = prefs.getLong(PREF_LAST_CHECK, 0)
+
+    init {
+        // Notifications of the downloads and installs (and the foreground service while they run).
+        scope.launch {
+            _apps.collect {
+                org.librehu.ota.Transfers
+                    .update(context, it)
+            }
+        }
+    }
 
     fun edition(): Edition = Edition.entries.firstOrNull { it.name == prefs.getString(PREF_EDITION, null) } ?: Edition.LIBREHU_SERVICE
 
@@ -368,8 +405,24 @@ class AppRepository private constructor(
         release: Release,
     ): File? =
         try {
-            setTask(pkg, Task.Downloading(0f))
-            val apk = Installer.download(context, release.apkUrl, "$pkg.apk") { p -> setTask(pkg, Task.Downloading(p)) }
+            pauses.remove(pkg)
+            setTask(pkg, Task.Downloading(0f, total = release.size.takeIf { it > 0 } ?: -1))
+            var speed = 0.0
+            var lastDone = -1L
+            var lastAt = 0L
+            val apk =
+                Installer.download(context, release.apkUrl, "$pkg.apk", release.size, { pkg in pauses }) { done, total ->
+                    val now = android.os.SystemClock.elapsedRealtime()
+                    if (lastDone >= 0 && now > lastAt) {
+                        // Smoothed over about two seconds (updates every 250 ms).
+                        val instant = (done - lastDone) * 1000.0 / (now - lastAt)
+                        speed = if (speed == 0.0) instant else speed * 0.85 + instant * 0.15
+                    }
+                    lastDone = done
+                    lastAt = now
+                    val eta = if (total > 0 && speed > 1) ((total - done) / speed).toLong() else -1L
+                    setTask(pkg, Task.Downloading(if (total > 0) done.toFloat() / total else -1f, done, total, speed.toLong(), eta))
+                }
             val info = Installer.archiveInfo(context, apk)
             if (info == null || info.packageName != pkg) {
                 setTask(pkg, Task.Failed("APK: ${info?.packageName ?: "?"}"))
@@ -377,11 +430,43 @@ class AppRepository private constructor(
             } else {
                 apk
             }
+        } catch (e: org.librehu.ota.install.DownloadPaused) {
+            pauses.remove(pkg)
+            setTask(pkg, Task.Paused(release, e.done, e.total))
+            null
         } catch (e: Exception) {
             Log.w(TAG, "download $pkg: ${e.message}")
             setTask(pkg, Task.Failed(e.message ?: e.javaClass.simpleName))
             null
         }
+
+    /** Pauses the download of [pkg] (the part already received is kept). */
+    fun pause(pkg: String) {
+        if (_apps.value.firstOrNull { it.app.packageName == pkg }?.task is Task.Downloading) pauses.add(pkg)
+    }
+
+    /** Resumes a paused download, then installs as before. */
+    fun resume(pkg: String) {
+        val t = _apps.value.firstOrNull { it.app.packageName == pkg }?.task as? Task.Paused ?: return
+        install(pkg, t.release)
+    }
+
+    /** Drops a paused download. */
+    fun cancel(pkg: String) {
+        val t = _apps.value.firstOrNull { it.app.packageName == pkg }?.task
+        if (t is Task.Downloading) {
+            pauses.add(pkg)
+            scope.launch {
+                // Once the download has stopped on the pause.
+                delay(800)
+                Installer.discardPart(context, "$pkg.apk")
+                setTask(pkg, Task.Idle)
+            }
+        } else if (t is Task.Paused) {
+            Installer.discardPart(context, "$pkg.apk")
+            setTask(pkg, Task.Idle)
+        }
+    }
 
     /**
      * After [Task.Incompatible] or [Task.Downgrade]: uninstall then install the downloaded APK. [keepData] (root,
@@ -541,20 +626,44 @@ class AppRepository private constructor(
         task: Task,
     ) = _apps.update { list -> list.map { if (it.app.packageName == pkg) it.copy(task = task) else it } }
 
-    private fun AppState.withInstalled(info: PackageInfo?): AppState =
-        copy(
-            installedCode =
-                info?.let {
-                    if (Build.VERSION.SDK_INT >= 28) {
-                        it.longVersionCode
-                    } else {
-                        @Suppress("DEPRECATION")
-                        it.versionCode.toLong()
-                    }
-                },
+    private fun AppState.withInstalled(info: PackageInfo?): AppState {
+        val flags = info?.applicationInfo?.flags ?: 0
+        val system = flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM != 0
+        val updated = flags and android.content.pm.ApplicationInfo.FLAG_UPDATED_SYSTEM_APP != 0
+        // The /system copy hidden by an update in /data.
+        val factory =
+            if (updated) {
+                runCatching { context.packageManager.getPackageInfo(app.packageName, PackageManager.MATCH_FACTORY_ONLY) }.getOrNull()
+            } else {
+                null
+            }
+        val inSystem =
+            if (updated) {
+                factory
+            } else if (system) {
+                info
+            } else {
+                null
+            }
+        val inData = if (info != null && (updated || !system)) info else null
+        return copy(
+            installedCode = info?.code(),
             installedName = info?.versionName,
             systemApp = Installer.isSystemApp(info),
+            systemCode = inSystem?.code(),
+            systemName = inSystem?.versionName,
+            dataCode = inData?.code(),
+            dataName = inData?.versionName,
         )
+    }
+
+    private fun PackageInfo.code(): Long =
+        if (Build.VERSION.SDK_INT >= 28) {
+            longVersionCode
+        } else {
+            @Suppress("DEPRECATION")
+            versionCode.toLong()
+        }
 
     private fun mergeCatalog(catalog: List<CatalogApp>) {
         _apps.update { old ->

@@ -9,6 +9,9 @@
     <!-- Daily check (CheckJob), scheduled again after a reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Downloads and installs (also from the background check) in a foreground service until they end. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- Logs of the other apps without root: granted from a computer, adb shell pm grant org.librehu.ota android.permission.READ_LOGS. -->
     <uses-permission
         android:name="android.permission.READ_LOGS"
@@ -50,6 +53,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".TransferService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <receiver
+            android:name=".TransferActionReceiver"
+            android:exported="false" />
 
         <receiver
             android:name=".install.InstallReceiver"

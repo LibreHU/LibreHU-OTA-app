@@ -227,7 +227,7 @@ private fun AppCard(
         }
         var versions by remember { mutableStateOf(false) }
         var logs by remember { mutableStateOf(false) }
-        val working = s.task is Task.Downloading || s.task == Task.Installing || s.task == Task.Queued
+        val working = s.task is Task.Downloading || s.task == Task.Installing || s.task == Task.Queued || s.task is Task.Paused
         val ignoredSet by org.librehu.ota.data.OtaSettingsStore
             .get(LocalContext.current)
             .collectAsStateWithLifecycle()
@@ -257,6 +257,45 @@ private fun AppCard(
                     LinearProgressIndicator(progress = { t.progress }, modifier = Modifier.fillMaxWidth(), color = CarColors.Accent)
                 } else {
                     LinearProgressIndicator(Modifier.fillMaxWidth(), color = CarColors.Accent)
+                }
+                val context = LocalContext.current
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        org.librehu.ota.Transfers
+                            .progressText(context, t.progress, t.done, t.total, t.speed, t.etaS),
+                        color = CarColors.TextDim,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Pill(stringResource(R.string.tr_pause), small = true) { repo.pause(s.app.packageName) }
+                    Spacer(Modifier.width(8.dp))
+                    Pill(stringResource(android.R.string.cancel), small = true) { repo.cancel(s.app.packageName) }
+                }
+            }
+
+            is Task.Paused -> {
+                if (t.progress >= 0) {
+                    LinearProgressIndicator(progress = { t.progress }, modifier = Modifier.fillMaxWidth(), color = CarColors.TextDim)
+                }
+                val context = LocalContext.current
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(
+                            R.string.tr_paused,
+                            org.librehu.ota.Transfers
+                                .percent(t.progress),
+                            org.librehu.ota.Transfers
+                                .size(context, t.done),
+                            org.librehu.ota.Transfers
+                                .size(context, t.total),
+                        ),
+                        color = CarColors.TextDim,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Pill(stringResource(R.string.tr_resume), selected = true, small = true) { repo.resume(s.app.packageName) }
+                    Spacer(Modifier.width(8.dp))
+                    Pill(stringResource(android.R.string.cancel), small = true) { repo.cancel(s.app.packageName) }
                 }
             }
 
@@ -297,14 +336,19 @@ private fun AppCard(
     }
 }
 
+/** Versions in /system and /data (or not installed there), and the one on GitHub. */
+@Composable
 private fun versionLine(s: AppState): String {
-    val installed = s.installedName?.let { "$it (${s.installedCode})" }
+    val none = stringResource(R.string.not_installed_short)
+    val system = s.systemName?.let { "$it (${s.systemCode})" } ?: none
+    val data = s.dataName?.let { "$it (${s.dataCode})" } ?: none
     val available = s.release?.let { "${it.versionName} (${it.versionCode})" }
     return listOfNotNull(
-        installed?.let { "↧ $it" },
+        "/system : $system",
+        "/data : $data",
         available?.let { "☁ $it" },
         s.checkError?.takeIf { s.release == null },
-    ).joinToString("   ").ifEmpty { "—" }
+    ).joinToString("   ")
 }
 
 @Composable
@@ -312,7 +356,7 @@ private fun Actions(
     s: AppState,
     repo: AppRepository,
 ) {
-    val working = s.task is Task.Downloading || s.task == Task.Installing || s.task == Task.Queued
+    val working = s.task is Task.Downloading || s.task == Task.Installing || s.task == Task.Queued || s.task is Task.Paused
     when {
         working -> {}
         s.updateAvailable -> Pill(stringResource(R.string.update), selected = true) { repo.install(s.app.packageName) }

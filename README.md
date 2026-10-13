@@ -53,6 +53,15 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
     empêche de démarrer : l'appli l'indique avec la commande à lancer soi-même
     (`fastboot --disable-verity flash vbmeta vbmeta.img`) et propose le module. Pour retirer : supprimer son dossier et son fichier
     `privapp-permissions`.
+- **Téléchargements** : débit (lissé sur ~2 s), quantité reçue / taille, pourcentage et **temps restant** sous la
+  barre de chaque appli ; **pause / reprise** (le morceau reçu est gardé, reprise par requête HTTP `Range` avec
+  `If-Range` sur l'ETag : un fichier remplacé sur GitHub repart de zéro ; taille vérifiée à la fin) et annulation.
+- **Notifications** (Paramètres, activées par défaut) : une par appli pendant le téléchargement (progression, débit,
+  temps restant, boutons Pause / Annuler, puis Reprendre), l'installation, puis « Installé » ou l'échec ; aussi pour
+  les installations de la vérification en arrière-plan. Tant que quelque chose tourne, un service au premier plan
+  (résumé : nombre d'applis, progression totale) garde LibreHU Apps en vie jusqu'à la fin.
+- **Versions installées** : chaque appli affiche sa version dans **/system** (la copie d'usine, même cachée par une
+  mise à jour) et dans **/data**, ou « non installé », à côté de celle de GitHub.
 - **Installations l'une après l'autre** : « Tout mettre à jour » télécharge en parallèle (2 par défaut) puis
   installe une appli à la fois (état « En attente »), LibreHU Apps elle-même en dernier (son processus se termine avec
   sa propre installation). Lancer plusieurs installations en même temps faisait échouer les suivantes ou fermer

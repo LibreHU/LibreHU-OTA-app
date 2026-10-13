@@ -42,6 +42,8 @@ data class OtaSettings(
     val wifiOnly: Boolean = false,
     /** Notification listing the apps to update. */
     val notify: Boolean = true,
+    /** Notifications of the downloads and installs (progress, pause, result). */
+    val notifyTransfers: Boolean = true,
     /** Updates installed by the background check (root only; LibreHU Apps itself last). */
     val autoInstall: Boolean = false,
     val method: InstallMethod = InstallMethod.AUTO,
@@ -97,6 +99,7 @@ object OtaSettingsStore {
             .putInt("interval_h", s.intervalH)
             .putBoolean("wifi_only", s.wifiOnly)
             .putBoolean("notify", s.notify)
+            .putBoolean("notify_transfers", s.notifyTransfers)
             .putBoolean("auto_install", s.autoInstall)
             .putString("method", s.method.name)
             .putBoolean("compile", s.compile)
@@ -124,6 +127,7 @@ object OtaSettingsStore {
                 intervalH = p.getInt("interval_h", d.intervalH),
                 wifiOnly = p.getBoolean("wifi_only", d.wifiOnly),
                 notify = p.getBoolean("notify", d.notify),
+                notifyTransfers = p.getBoolean("notify_transfers", d.notifyTransfers),
                 autoInstall = p.getBoolean("auto_install", d.autoInstall),
                 method = InstallMethod.entries.firstOrNull { it.name == p.getString("method", null) } ?: d.method,
                 compile = p.getBoolean("compile", d.compile),

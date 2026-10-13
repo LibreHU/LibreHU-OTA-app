@@ -88,6 +88,15 @@ fun SettingsScreen() {
                     }
                     SwitchLine(stringResource(R.string.set_wifi_only), s.wifiOnly) { on -> set(true) { it.copy(wifiOnly = on) } }
                     SwitchLine(stringResource(R.string.set_notify), s.notify) { on -> set { it.copy(notify = on) } }
+                }
+                SwitchLine(
+                    stringResource(R.string.set_notify_transfers),
+                    s.notifyTransfers,
+                    stringResource(R.string.set_notify_transfers_hint),
+                ) { on ->
+                    set { it.copy(notifyTransfers = on) }
+                }
+                if (s.autoCheck) {
                     SwitchLine(
                         stringResource(R.string.set_auto_install),
                         s.autoInstall,

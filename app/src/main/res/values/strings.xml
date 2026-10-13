@@ -154,4 +154,20 @@
     <string name="zips_confirm_image">The image is downloaded and checked, the current %1$s partition is copied to /sdcard/LibreHU/backup, then the image is written and read back. Continue?</string>
     <string name="zips_image_done">Written: %1$s</string>
     <string name="set_zips_index">Zips index (empty = LibreHU)</string>
+    <string name="tr_pause">Pause</string>
+    <string name="tr_resume">Resume</string>
+    <string name="tr_installing">Installing…</string>
+    <string name="tr_paused">Paused · %1$s · %2$s / %3$s</string>
+    <string name="tr_done">Installed: %1$s</string>
+    <string name="tr_action">A choice is needed: open LibreHU Apps</string>
+    <string name="tr_eta">%1$s left</string>
+    <plurals name="tr_summary">
+        <item quantity="one">%d app being updated</item>
+        <item quantity="other">%d apps being updated</item>
+    </plurals>
+    <string name="channel_transfers">Downloads and installs</string>
+    <string name="channel_transfers_done">Installs done</string>
+    <string name="not_installed_short">not installed</string>
+    <string name="set_notify_transfers">Download and install notifications</string>
+    <string name="set_notify_transfers_hint">Progress, speed and time left, pause / resume, then installed or failed; also for the background installs.</string>
 </resources>

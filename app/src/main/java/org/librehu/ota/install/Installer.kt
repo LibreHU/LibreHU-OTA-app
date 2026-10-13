@@ -41,6 +41,12 @@ sealed class InstallResult {
     ) : InstallResult()
 }
 
+/** A download stopped by a pause: [done] bytes kept in the `.part` file. */
+class DownloadPaused(
+    val done: Long,
+    val total: Long,
+) : IOException("paused")
+
 /** Download, checks and installation of an APK (root `pm install`, or Android's package installer). */
 object Installer {
     /** One compilation at a time (several updates in a row would load the CPU for minutes otherwise). */
@@ -54,36 +60,112 @@ object Installer {
         url: String,
         name: String,
         onProgress: (Float) -> Unit,
+    ): File = download(context, url, name) { done, total -> onProgress(if (total > 0) done.toFloat() / total else -1f) }
+
+    /**
+     * Downloads [url] into the cache as [name], resuming a `.part` left by a pause (HTTP Range, with `If-Range` on the
+     * ETag of the first response, so that a file replaced on the server starts again from zero). [onProgress] gets the
+     * bytes done and the total (-1 when unknown), at most every 250 ms; [paused] is asked between two blocks and stops
+     * it with [DownloadPaused], keeping the part. [expectedSize] (when known, > 0) is checked at the end.
+     */
+    fun download(
+        context: Context,
+        url: String,
+        name: String,
+        expectedSize: Long = 0,
+        paused: () -> Boolean = { false },
+        onProgress: (done: Long, total: Long) -> Unit,
     ): File {
         val dir = File(context.cacheDir, "apk").apply { mkdirs() }
         val dest = File(dir, name)
         val part = File(dir, "$name.part")
+        // Where the part comes from: its URL and ETag; another URL starts again.
+        val meta = File(dir, "$name.part.src")
+        val previous = runCatching { meta.readLines() }.getOrDefault(emptyList())
+        if (previous.firstOrNull() != url) part.delete()
+        var start = if (part.exists()) part.length() else 0L
         val c = GitHub.open(url)
+        if (start > 0) {
+            c.setRequestProperty("Range", "bytes=$start-")
+            previous.getOrNull(1)?.takeIf { it.isNotEmpty() }?.let { c.setRequestProperty("If-Range", it) }
+        }
         try {
-            if (c.responseCode !in 200..299) throw IOException("HTTP ${c.responseCode}")
-            val total = c.contentLengthLong
+            val code = c.responseCode
+            if (code == 416 && expectedSize > 0 && start == expectedSize) {
+                // Everything was already there.
+                return finish(part, dest, meta, expectedSize)
+            }
+            if (code == 416) {
+                part.delete()
+                meta.delete()
+                throw IOException("HTTP 416")
+            }
+            if (code !in 200..299) throw IOException("HTTP $code")
+            val append = code == 206
+            if (!append) start = 0
+            val length = c.contentLengthLong
+            val total =
+                if (length > 0) {
+                    start + length
+                } else if (expectedSize > 0) {
+                    expectedSize
+                } else {
+                    -1L
+                }
+            meta.writeText("$url\n${c.getHeaderField("ETag").orEmpty()}\n")
             c.inputStream.use { input ->
-                part.outputStream().use { out ->
+                java.io.FileOutputStream(part, append).use { out ->
                     val buf = ByteArray(64 * 1024)
-                    var done = 0L
-                    var last = 0L
+                    var done = start
+                    var lastAt = 0L
+                    onProgress(done, total)
                     while (true) {
+                        if (paused()) throw DownloadPaused(done, total)
                         val n = input.read(buf)
                         if (n < 0) break
                         out.write(buf, 0, n)
                         done += n
-                        if (done - last > 256 * 1024) {
-                            last = done
-                            onProgress(if (total > 0) done.toFloat() / total else -1f)
+                        val now = android.os.SystemClock.elapsedRealtime()
+                        if (now - lastAt >= 250) {
+                            lastAt = now
+                            onProgress(done, total)
                         }
                     }
+                    onProgress(done, total)
                 }
             }
         } finally {
             c.disconnect()
         }
+        return finish(part, dest, meta, expectedSize)
+    }
+
+    private fun finish(
+        part: File,
+        dest: File,
+        meta: File,
+        expectedSize: Long,
+    ): File {
+        if (expectedSize > 0 && part.length() != expectedSize) {
+            val got = part.length()
+            part.delete()
+            meta.delete()
+            throw IOException("size $got / $expectedSize")
+        }
+        dest.delete()
         if (!part.renameTo(dest)) throw IOException("rename ${part.name}")
+        meta.delete()
         return dest
+    }
+
+    /** Drops what a paused download of [name] kept. */
+    fun discardPart(
+        context: Context,
+        name: String,
+    ) {
+        val dir = File(context.cacheDir, "apk")
+        File(dir, "$name.part").delete()
+        File(dir, "$name.part.src").delete()
     }
 
     /** Package of the downloaded APK, or null when Android cannot read it. */
