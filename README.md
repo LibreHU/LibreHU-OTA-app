@@ -5,7 +5,9 @@ version installée à la dernière publiée sur GitHub, installe et met à jour.
 de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
 
 - **Catalogue** : [catalog.json](catalog.json) de ce dépôt (téléchargé à chaque vérification), avec une copie
-  intégrée à l'appli quand GitHub n'est pas joignable. Pour ajouter une appli : une entrée dans ce fichier.
+  intégrée à l'appli quand GitHub n'est pas joignable. Pour ajouter une appli : une entrée dans ce fichier. Il
+  comprend les forks LibreHU d'Open Headunit (« Android Auto », `LibreHU/LibreHU-open-headunit-app`) et de
+  xcertplay (« CarPlay », `LibreHU/LibreHU-xcertplay-app`, branche `master`).
 - **Releases** : chaque dépôt publie, à chaque push, une pré-release continue par branche (`latest-<branche>`) avec
   l'APK et sa version dans les notes (`versionCode=…`, `versionName=…`), par l'étape « Rolling release » de son
   workflow `build.yml`. Il garde aussi les **15 dernières compilations** de chaque branche, en releases numérotées

@@ -79,8 +79,15 @@ object Catalog {
             CatalogApp(
                 "headunit",
                 "Android Auto (Open Headunit LibreHU)",
-                "Dok-T/LibreHU-open-headunit-app",
+                "LibreHU/LibreHU-open-headunit-app",
                 "org.librehu.headunit",
+            ),
+            CatalogApp(
+                "carplay",
+                "CarPlay (xcertplay LibreHU)",
+                "LibreHU/LibreHU-xcertplay-app",
+                "org.librehu.carplay",
+                branches = listOf("master"),
             ),
             CatalogApp("ota", "LibreHU Apps (OTA)", "LibreHU/LibreHU-OTA-app", "org.librehu.ota"),
         )

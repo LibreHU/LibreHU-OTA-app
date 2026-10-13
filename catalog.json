@@ -112,11 +112,22 @@
     {
       "id": "headunit",
       "name": "Android Auto (Open Headunit LibreHU)",
-      "repo": "Dok-T/LibreHU-open-headunit-app",
+      "repo": "LibreHU/LibreHU-open-headunit-app",
       "package": "org.librehu.headunit",
       "description": "",
       "branches": [
         "main"
+      ],
+      "tagged": false
+    },
+    {
+      "id": "carplay",
+      "name": "CarPlay (xcertplay LibreHU)",
+      "repo": "LibreHU/LibreHU-xcertplay-app",
+      "package": "org.librehu.carplay",
+      "description": "",
+      "branches": [
+        "master"
       ],
       "tagged": false
     },
