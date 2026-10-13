@@ -60,10 +60,11 @@ object RwMount {
           done
           RW_WASRO=${'$'}(blockdev --getro "${'$'}RW_DEV" 2>/dev/null)
           blockdev --setrw "${'$'}RW_DEV" 2>/dev/null
-          # 1) As adb remount: the mount Android uses (/ in system-as-root) remounted read-write in place, kept only
+          # 1) As adb remount (BLKROSET 0, then MS_REMOUNT|MS_BIND and MS_REMOUNT): the mount Android uses (/ in
+          #    system-as-root) remounted read-write in place, kept only
           #    when a test file can really be written (not a tmpfs of root modules: other device, skipped).
           if [ -n "${'$'}RW_MP" ] && [ "${'$'}(readlink -f "${'$'}_mdev")" = "${'$'}(readlink -f "${'$'}RW_DEV")" ] &&
-            mount -o remount,rw "${'$'}RW_MP" 2>/dev/null; then
+            { mount -o remount,bind,rw "${'$'}RW_MP" 2>/dev/null; mount -o remount,rw "${'$'}RW_MP" 2>/dev/null; }; then
             _t=${'$'}1; [ -d "${'$'}_t" ] || _t=${'$'}(dirname "${'$'}_t")
             if touch "${'$'}_t/.librehu_rw" 2>/dev/null && rm -f "${'$'}_t/.librehu_rw"; then
               RW_INPLACE=${'$'}RW_MP; RW="${'$'}1"
