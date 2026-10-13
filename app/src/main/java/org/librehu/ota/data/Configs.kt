@@ -190,15 +190,20 @@ object Configs {
         }
     }
 
-    /** Zip [input] put in the internal storage as [name], TWRP's OpenRecoveryScript told to install it. */
+    /**
+     * Zip [input] put in the internal storage as [name], TWRP's OpenRecoveryScript told to install it; [append] adds it
+     * after the zips already waiting there (several installs in one visit to the recovery).
+     */
     internal fun flash(
         input: InputStream,
         name: String,
+        append: Boolean = false,
     ): Outcome {
         val zip = "$FLASH_DIR/$name"
+        val redirect = if (append) ">>" else ">"
         val out =
             Root.run(
-                "mkdir -p $FLASH_DIR /cache/recovery && cat > '$zip' && echo 'install $zip' > $ORS && chmod 0644 '$zip' $ORS",
+                "mkdir -p $FLASH_DIR /cache/recovery && cat > '$zip' && echo 'install $zip' $redirect $ORS && chmod 0644 '$zip' $ORS",
                 input,
             ) ?: return Outcome.Failed("su")
         return if (out.exit == 0) Outcome.Done(zip) else Outcome.Failed(out.output.ifEmpty { "exit ${out.exit}" })

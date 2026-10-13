@@ -209,5 +209,10 @@
     <string name="set_about_zips">Index des zips</string>
     <string name="set_about_hint">LibreHU Apps installe et met à jour les applis LibreHU depuis leurs releases GitHub, et flashe les zips LibreHU.</string>
     <string name="system_twrp">Par TWRP (redémarre en recovery maintenant)</string>
-    <string name="system_write_protected">Android ne peut pas écrire /system sur cet autoradio : l\'eMMC refuse les écritures en démarrage normal (erreur d\'E/S, zones protégées du noyau stock). Installer par TWRP : LibreHU Apps prépare un zip, redémarre en recovery, TWRP l\'écrit puis relance Android.</string>
+    <string name="system_write_protected">L\'écriture de /system depuis Android a échoué (erreur d\'E/S), même après l\'avoir remonté en écriture comme adb remount. Installer par TWRP : LibreHU Apps prépare un zip, redémarre en recovery, TWRP l\'écrit puis relance Android.</string>
+    <string name="recovery_waiting">Installation dans /system en attente de TWRP : %1$s</string>
+    <string name="recovery_waiting_short">en attente du redémarrage dans TWRP</string>
+    <string name="recovery_reboot">Redémarrer dans TWRP</string>
+    <string name="set_system_way_recovery">Par TWRP</string>
+    <string name="set_system_way_hint">Automatique : module root si le gestionnaire le monte, sinon écriture dans /system (remonté en écriture comme adb remount) ; si Android n\'arrive toujours pas à l\'écrire, par TWRP. Par TWRP : les installations attendent dans le script de la recovery, un seul redémarrage dans TWRP les écrit toutes.</string>
 </resources>

@@ -32,6 +32,9 @@ enum class SystemWay {
     AUTO,
     MODULE,
     DIRECT,
+
+    /** A zip for TWRP, all of them flashed in one visit to the recovery (the eMMC refuses /system in a normal start). */
+    RECOVERY,
 }
 
 data class OtaSettings(

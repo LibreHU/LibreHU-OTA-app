@@ -284,6 +284,10 @@ class AppRepository private constructor(
         if (s.systemScope == SystemScope.SYSTEM_APPS && plan.current == null && !state.systemApp) return false
         val canModule = plan.manager != null && !plan.needsMetamodule
         val privApp = plan.recommendPrivApp
+        // TWRP when asked, or (automatic) when /system already refused its blocks here and no module can do it.
+        if (s.systemWay == SystemWay.RECOVERY || (s.systemWay == SystemWay.AUTO && !canModule && prefs.getBoolean(PREF_WRITE_PROTECTED, false))) {
+            return toRecovery(pkg, apk, s, state, privApp, plan)
+        }
         var result =
             when {
                 s.systemWay == SystemWay.MODULE || (s.systemWay == SystemWay.AUTO && canModule) -> {
@@ -298,6 +302,11 @@ class AppRepository private constructor(
         if (result is InstallResult.ReadOnly && canModule) {
             result = SystemInstall.installModule(context, apk, pkg, state.app.name, privApp, plan)
         }
+        // Blocks refused by the eMMC in this start: remembered, and TWRP does it.
+        if (result == InstallResult.ReadOnly(SystemInstall.WRITE_PROTECTED)) {
+            prefs.edit().putBoolean(PREF_WRITE_PROTECTED, true).apply()
+            if (s.systemWay != SystemWay.MODULE) return toRecovery(pkg, apk, s, state, privApp, plan)
+        }
         if (result != InstallResult.RebootNeeded) {
             // /system refused (read-only without module, no root manager…): the usual install in /data instead.
             History.add(context, state.app.name, "/system", false, (result as? InstallResult.Failed)?.message ?: result.toString())
@@ -309,6 +318,71 @@ class AppRepository private constructor(
         }
         onInstallResult(pkg, result)
         return true
+    }
+
+    /**
+     * The /system install of [pkg] as a TWRP zip added to OpenRecoveryScript ([pendingRecovery] until the reboot into
+     * the recovery); also in /data when asked, so that the new version runs now.
+     */
+    private fun toRecovery(
+        pkg: String,
+        apk: File,
+        s: OtaSettings,
+        state: AppState,
+        privApp: Boolean,
+        plan: SystemInstall.Plan,
+    ): Boolean {
+        val outcome =
+            runCatching {
+                val zip = SystemInstall.recoveryZip(context, apk, pkg, privApp, plan)
+                try {
+                    zip.inputStream().use { Configs.flash(it, zip.name, append = pendingRecovery.value.isNotEmpty()) }
+                } finally {
+                    zip.delete()
+                }
+            }.getOrElse { Configs.Outcome.Failed(it.message ?: it.javaClass.simpleName) }
+        if (outcome !is Configs.Outcome.Done) {
+            History.add(context, state.app.name, "/system (TWRP)", false, (outcome as Configs.Outcome.Failed).reason)
+            return false
+        }
+        History.add(context, state.app.name, "/system (TWRP)", true, context.getString(org.librehu.ota.R.string.recovery_waiting_short))
+        addPendingRecovery(state.app.name)
+        if (s.systemAlsoData && !plan.otherSignature) {
+            Installer.install(context, apk, pkg, InstallMethod.ROOT, s.compile)
+            refreshInstalled()
+        }
+        setTask(pkg, Task.RebootNeeded)
+        return true
+    }
+
+    private val _pendingRecovery = MutableStateFlow(loadPendingRecovery())
+
+    /** Apps whose /system install waits for the reboot into TWRP (OpenRecoveryScript written). */
+    val pendingRecovery: StateFlow<List<String>> = _pendingRecovery
+
+    private fun addPendingRecovery(name: String) {
+        val list = (_pendingRecovery.value + name).distinct()
+        _pendingRecovery.value = list
+        prefs
+            .edit()
+            .putString(PREF_RECOVERY, list.joinToString("\n"))
+            .putString(PREF_RECOVERY_BOOT, bootId())
+            .apply()
+    }
+
+    /** Waiting installs of this start only: after a reboot TWRP has run them (or the script was dropped). */
+    private fun loadPendingRecovery(): List<String> =
+        if (prefs.getString(PREF_RECOVERY_BOOT, null) == bootId()) {
+            prefs.getString(PREF_RECOVERY, null)?.split('\n')?.filter { it.isNotBlank() }.orEmpty()
+        } else {
+            emptyList()
+        }
+
+    private fun bootId(): String = runCatching { File("/proc/sys/kernel/random/boot_id").readText().trim() }.getOrDefault("")
+
+    /** Reboots into TWRP, which flashes the waiting zips then starts Android again. */
+    fun rebootRecovery() {
+        scope.launch { Configs.rebootRecovery() }
     }
 
     /** Every available update, except the ignored apps; LibreHU Apps itself last. */
@@ -403,7 +477,7 @@ class AppRepository private constructor(
                 runCatching {
                     val zip = SystemInstall.recoveryZip(context, task.apk, pkg, privApp, task.plan)
                     try {
-                        zip.inputStream().use { Configs.flash(it, zip.name) }
+                        zip.inputStream().use { Configs.flash(it, zip.name, append = pendingRecovery.value.isNotEmpty()) }
                     } finally {
                         zip.delete()
                     }
@@ -753,6 +827,9 @@ class AppRepository private constructor(
         private const val PREF_EDITION = "edition"
         private const val PREF_CATALOG = "catalog"
         private const val PREF_LAST_CHECK = "last_check"
+        private const val PREF_WRITE_PROTECTED = "system_write_protected"
+        private const val PREF_RECOVERY = "recovery_pending"
+        private const val PREF_RECOVERY_BOOT = "recovery_pending_boot"
         private const val LOG_LINES = 2000
 
         /** Commit at the end of a `git describe` version name: `v1.2-3-gabc1234`, `abc1234`, `abc1234-dirty`. */

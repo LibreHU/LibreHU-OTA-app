@@ -165,9 +165,11 @@ fun SettingsScreen(repo: AppRepository) {
                             SystemWay.AUTO to stringResource(R.string.set_system_way_auto),
                             SystemWay.MODULE to stringResource(R.string.set_system_way_module),
                             SystemWay.DIRECT to stringResource(R.string.set_system_way_direct),
+                            SystemWay.RECOVERY to stringResource(R.string.set_system_way_recovery),
                         ),
                         s.systemWay,
                     ) { v -> set { it.copy(systemWay = v) } }
+                    Hint(stringResource(R.string.set_system_way_hint))
                     SwitchLine(stringResource(R.string.set_system_data), s.systemAlsoData, stringResource(R.string.set_system_data_hint)) { on ->
                         set { it.copy(systemAlsoData = on) }
                     }

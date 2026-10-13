@@ -141,6 +141,8 @@ fun OtaApp(
                 onRefresh = if (d == null && page != Page.SETTINGS) ({ repo.check() }) else null,
                 busy = busy,
             )
+            val pending by repo.pendingRecovery.collectAsStateWithLifecycle()
+            if (pending.isNotEmpty()) RecoveryBanner(pending) { repo.rebootRecovery() }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (d != null) {
                     AppDetailsScreen(d, repo, open)
@@ -193,6 +195,33 @@ private fun TopBar(
             LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp), color = CarColors.Accent, trackColor = CarColors.Background)
         } else {
             Spacer(Modifier.height(2.dp))
+        }
+    }
+}
+
+/** /system installs waiting for TWRP, and the button that reboots into it. */
+@Composable
+private fun RecoveryBanner(
+    apps: List<String>,
+    reboot: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 6.dp)
+            .background(CarColors.Accent, androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            stringResource(R.string.recovery_waiting, apps.joinToString(", ")),
+            color = CarColors.OnAccent,
+            fontSize = 15.sp,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(12.dp))
+        androidx.compose.material3.TextButton(onClick = reboot) {
+            Text(stringResource(R.string.recovery_reboot), color = CarColors.OnAccent, fontWeight = FontWeight.Medium)
         }
     }
 }

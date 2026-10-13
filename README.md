@@ -68,20 +68,19 @@ installation (`install/`) n'ont pas changé.
     en lecture seule, et se retire depuis la liste des modules. Une ancienne copie ailleurs dans /system est masquée
     (`.replace`). KernelSU officiel 3.0 et plus ne monte les fichiers /system des modules qu'avec un **metamodule**
     (meta-overlayfs) ; KernelSU Next et Magisk les montent eux-mêmes.
-  - **Par TWRP** (recommandé sur l'UJC201 sans gestionnaire root à modules) : en démarrage normal, le noyau stock
-    protège des zones de l'eMMC en écriture (pilote MSDC propriétaire : `write protect region`, `hw write protect
-    violation`) ; l'écriture directe dans /system finit donc en **erreur d'E/S** même une fois la partition montée en
-    écriture. LibreHU Apps prépare alors un petit zip (APK, liste blanche des permissions, ancienne copie retirée),
-    l'inscrit dans OpenRecoveryScript et redémarre en recovery : TWRP l'écrit, vérifie l'APK et relance Android.
-  - **Écrire dans /system** : `mount -o rw,remount` ne marche pas sur l'autoradio (system-as-root : / apparaît
-    comme `/dev/root`, un nœud qui n'existe pas, donc la protection en lecture seule qu'Android met sur le bloc ne
-    peut pas être levée par lui ; et avec Magisk, `/system/priv-app` peut être un tmpfs où l'écriture serait perdue).
-    Le vrai bloc (`by-name/system`) est donc monté une seconde fois dans un dossier privé, ce montage passé en
-    écriture, les fichiers écrits à travers lui, puis tout est remis en lecture seule ; le montage d'Android n'est
-    pas touché. Refusé si la partition est sous dm-verity (bloc esclave d'un `dm-*`), car écrire sous dm-verity
-    empêche de démarrer : l'appli l'indique avec la commande à lancer soi-même
-    (`fastboot --disable-verity flash vbmeta vbmeta.img`) et propose le module. Pour retirer : supprimer son dossier et son fichier
-    `privapp-permissions`.
+  - **Par TWRP** (secours) : si Android n'arrive pas à écrire /system, LibreHU Apps prépare un petit zip (APK,
+    liste blanche des permissions, ancienne copie retirée), l'ajoute à OpenRecoveryScript ; un seul redémarrage dans
+    TWRP écrit toutes les installations en attente (bandeau « Redémarrer dans TWRP »), vérifie les APK et relance
+    Android. Choix « Par TWRP » dans Réglages › /system, ou automatique après un échec d'écriture.
+  - **Écrire dans /system** : comme `adb remount` : le vrai bloc (`by-name/system`) est rendu inscriptible
+    (`blockdev --setrw`), puis le montage qu'Android utilise (`/` en system-as-root, qui apparaît comme `/dev/root`)
+    est remonté en écriture sur place, gardé seulement si un fichier de test s'écrit ; remis en lecture seule ensuite.
+    `mount -o rw,remount /system` seul ne marche pas (il vise `/dev/root`, un nœud qui n'existe pas). En secours (et
+    avec Magisk, dont le tmpfs sur `/system/priv-app` perdrait l'écriture), une seconde montée privée du bloc ; sur
+    l'UJC201 elle donnait des erreurs d'E/S là où `adb remount` marche. Refusé si la partition est sous dm-verity
+    (bloc esclave d'un `dm-*`) : l'appli l'indique avec la commande à lancer soi-même
+    (`fastboot --disable-verity flash vbmeta vbmeta.img`) et propose le module ou TWRP. Pour retirer : supprimer son
+    dossier et son fichier `privapp-permissions`.
 - **Téléchargements** : débit (lissé sur ~2 s), quantité reçue / taille, pourcentage et **temps restant** sur la tuile, la ligne de mise à jour, la fiche et la page Téléchargements ; **pause / reprise** (le morceau reçu est gardé, reprise par requête HTTP `Range` avec
   `If-Range` sur l'ETag : un fichier remplacé sur GitHub repart de zéro ; taille vérifiée à la fin) et annulation.
 - **Notifications** (Réglages, activées par défaut) : une par appli pendant le téléchargement (progression, débit,
@@ -121,7 +120,7 @@ installation (`install/`) n'ont pas changé.
     `/cache/recovery/openrecoveryscript`, puis redémarrage en recovery (TWRP l'exécute et redémarre).
 
   Le fichier remplacé est d'abord copié dans `/sdcard/LibreHU/backup`, son label SELinux gardé. Une partition en
-  lecture seule (/system, /vendor, /jancar…) est écrite par le même montage privé que « Écrire dans /system »,
+  lecture seule (/system, /vendor, /jancar…) est écrite par la même méthode que « Écrire dans /system » (remontage en place façon adb remount, sinon montage privé),
   **sauf si elle est protégée par dm-verity** : rien n'est écrit, car
   l'autoradio ne démarrerait plus ; désactiver d'abord verity (`fastboot --disable-verity flash vbmeta vbmeta.img`).
 - **Zips › Zips flashables** (root) : les zips flashables de
