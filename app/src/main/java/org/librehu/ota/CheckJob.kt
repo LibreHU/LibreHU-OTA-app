@@ -18,6 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.librehu.ota.data.AppRepository
+import org.librehu.ota.data.OtaSettingsStore
 import java.util.concurrent.TimeUnit
 
 /** Daily check for new releases (with network); a notification lists the apps to update. */
@@ -28,7 +29,16 @@ class CheckJob : JobService() {
             repo.check()
             delay(500)
             repo.busy.first { !it }
-            notifyUpdates(this@CheckJob, repo.updates().map { it.app.name })
+            val s = OtaSettingsStore.value(this@CheckJob)
+            val updates = repo.updates().filter { it.app.packageName !in s.ignored }
+            if (s.notify) notifyUpdates(this@CheckJob, updates.map { it.app.name })
+            // Background install (root only, so that nothing asks): LibreHU Apps itself last.
+            if (s.autoInstall && updates.isNotEmpty() &&
+                org.librehu.ota.install.Root
+                    .isAvailable()
+            ) {
+                repo.updateAll()
+            }
             jobFinished(params, false)
         }
         return true
@@ -40,35 +50,34 @@ class CheckJob : JobService() {
         private const val JOB_ID = 4201
         private const val CHANNEL = "updates"
         private const val NOTIFICATION_ID = 1
-        private const val PREF_AUTO = "auto_check"
 
-        fun enabled(context: Context) = context.getSharedPreferences("ota", Context.MODE_PRIVATE).getBoolean(PREF_AUTO, true)
+        fun enabled(context: Context) = OtaSettingsStore.value(context).autoCheck
 
         fun setEnabled(
             context: Context,
             on: Boolean,
         ) {
-            context
-                .getSharedPreferences("ota", Context.MODE_PRIVATE)
-                .edit()
-                .putBoolean(PREF_AUTO, on)
-                .apply()
-            schedule(context)
+            OtaSettingsStore.update(context) { it.copy(autoCheck = on) }
+            schedule(context, force = true)
         }
 
-        /** Schedules (or cancels) the daily check. */
-        fun schedule(context: Context) {
+        /** Schedules (or cancels) the periodic check, at the interval and on the network of the settings. */
+        fun schedule(
+            context: Context,
+            force: Boolean = false,
+        ) {
             val js = context.getSystemService(JobScheduler::class.java) ?: return
-            if (!enabled(context)) {
+            val s = OtaSettingsStore.value(context)
+            if (!s.autoCheck) {
                 js.cancel(JOB_ID)
                 return
             }
-            if (js.getPendingJob(JOB_ID) != null) return
+            if (!force && js.getPendingJob(JOB_ID) != null) return
             js.schedule(
                 JobInfo
                     .Builder(JOB_ID, ComponentName(context, CheckJob::class.java))
-                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                    .setPeriodic(TimeUnit.HOURS.toMillis(24))
+                    .setRequiredNetworkType(if (s.wifiOnly) JobInfo.NETWORK_TYPE_UNMETERED else JobInfo.NETWORK_TYPE_ANY)
+                    .setPeriodic(TimeUnit.HOURS.toMillis(s.intervalH.coerceAtLeast(1).toLong()))
                     .setPersisted(true)
                     .build(),
             )

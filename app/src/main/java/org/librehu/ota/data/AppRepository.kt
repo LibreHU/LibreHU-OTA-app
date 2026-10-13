@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import org.librehu.ota.install.InstallResult
 import org.librehu.ota.install.Installer
@@ -53,6 +54,9 @@ sealed class Task {
         val progress: Float,
     ) : Task()
 
+    /** Downloaded, waiting for the installs before it (one at a time). */
+    data object Queued : Task()
+
     data object Installing : Task()
 
     data object Done : Task()
@@ -87,6 +91,16 @@ class AppRepository private constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val prefs = context.getSharedPreferences("ota", Context.MODE_PRIVATE)
     private val checking = Mutex()
+
+    /**
+     * Installs one at a time: several `pm install` (or installer sessions) at once, and above all LibreHU Apps
+     * replacing itself while others run, made "update all" fail or close the app.
+     */
+    private val installing = Mutex()
+    private val downloads = kotlinx.coroutines.sync.Semaphore(OtaSettingsStore.value(context).parallelDownloads.coerceIn(1, 4))
+
+    /** Version name each running install goes to (history). */
+    private val targets = java.util.concurrent.ConcurrentHashMap<String, String>()
 
     private val _apps = MutableStateFlow(loadCatalog().map { AppState(it) })
     val apps: StateFlow<List<AppState>> = _apps
@@ -176,23 +190,75 @@ class AppRepository private constructor(
         pkg: String,
         release: Release,
     ) {
+        if (busyTask(pkg)) return
+        setTask(pkg, Task.Queued)
         scope.launch {
-            val apk = download(pkg, release) ?: return@launch
-            try {
-                setTask(pkg, Task.Installing)
-                val result = Installer.install(context, apk, pkg)
-                if (result == InstallResult.Incompatible) {
-                    setTask(pkg, Task.Incompatible(apk))
-                } else if (result == InstallResult.Downgrade) {
-                    setTask(pkg, Task.Downgrade(apk))
-                } else if (result != InstallResult.Pending) {
-                    onInstallResult(pkg, result)
+            val apk = downloads.withPermit { download(pkg, release) } ?: return@launch
+            setTask(pkg, Task.Queued)
+            // LibreHU Apps replaces itself last: its process ends with the install.
+            if (pkg == context.packageName) {
+                while (_apps.value.any { it.app.packageName != pkg && it.task.isRunning() }) delay(500)
+            }
+            installing.withLock {
+                try {
+                    setTask(pkg, Task.Installing)
+                    targets[pkg] = release.versionName
+                    val s = OtaSettingsStore.value(context)
+                    val result = withContext(Dispatchers.IO) { Installer.install(context, apk, pkg, s.method, s.compile) }
+                    if (result == InstallResult.Incompatible) {
+                        setTask(pkg, Task.Incompatible(apk))
+                        record(pkg, false, "signature")
+                    } else if (result == InstallResult.Downgrade) {
+                        setTask(pkg, Task.Downgrade(apk))
+                        record(pkg, false, "downgrade")
+                    } else if (result != InstallResult.Pending) {
+                        onInstallResult(pkg, result)
+                    } else {
+                        // Android's installer: the next one waits for this answer (or a minute).
+                        var waited = 0
+                        while (_apps.value.firstOrNull { it.app.packageName == pkg }?.task == Task.Installing && waited < 120) {
+                            delay(500)
+                            waited++
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "install $pkg: ${e.message}")
+                    setTask(pkg, Task.Failed(e.message ?: e.javaClass.simpleName))
+                    record(pkg, false, e.message ?: e.javaClass.simpleName)
                 }
-            } catch (e: Exception) {
-                Log.w(TAG, "install $pkg: ${e.message}")
-                setTask(pkg, Task.Failed(e.message ?: e.javaClass.simpleName))
             }
         }
+    }
+
+    /** Every available update, except the ignored apps; LibreHU Apps itself last. */
+    fun updateAll() {
+        val ignored = OtaSettingsStore.value(context).ignored
+        _apps.value
+            .filter { it.updateAvailable && it.app.packageName !in ignored }
+            .sortedBy { it.app.packageName == context.packageName }
+            .forEach { install(it.app.packageName) }
+    }
+
+    fun setIgnored(
+        pkg: String,
+        ignored: Boolean,
+    ) = OtaSettingsStore.update(context) { it.copy(ignored = if (ignored) it.ignored + pkg else it.ignored - pkg) }
+
+    private fun busyTask(pkg: String) =
+        _apps.value
+            .firstOrNull { it.app.packageName == pkg }
+            ?.task
+            ?.isRunning() == true
+
+    private fun Task.isRunning() = this is Task.Queued || this is Task.Downloading || this is Task.Installing
+
+    private fun record(
+        pkg: String,
+        ok: Boolean,
+        result: String,
+    ) {
+        val s = _apps.value.firstOrNull { it.app.packageName == pkg } ?: return
+        History.add(context, s.app.name, "${s.installedName ?: "—"} → ${targets.remove(pkg) ?: "?"}", ok, result)
     }
 
     /** Downloads [release] (or the current release) of [pkg] then asks where in /system ([Task.SystemChoice]). Root. */
@@ -320,6 +386,21 @@ class AppRepository private constructor(
         pkg: String,
         result: InstallResult,
     ) {
+        if (result != InstallResult.Pending) {
+            record(
+                pkg,
+                result == InstallResult.Done || result == InstallResult.RebootNeeded,
+                when (result) {
+                    InstallResult.Done -> "OK"
+                    InstallResult.RebootNeeded -> "reboot"
+                    InstallResult.Incompatible -> "signature"
+                    InstallResult.Downgrade -> "downgrade"
+                    is InstallResult.ReadOnly -> "/system: ${result.detail}"
+                    is InstallResult.Failed -> result.message.ifEmpty { "cancelled" }
+                    InstallResult.Pending -> ""
+                },
+            )
+        }
         setTask(
             pkg,
             when (result) {
@@ -333,7 +414,7 @@ class AppRepository private constructor(
             },
         )
         if (result == InstallResult.Done || result == InstallResult.RebootNeeded) {
-            File(context.cacheDir, "apk/$pkg.apk").delete()
+            if (!OtaSettingsStore.value(context).keepApks) File(context.cacheDir, "apk/$pkg.apk").delete()
             refreshInstalled()
         }
     }

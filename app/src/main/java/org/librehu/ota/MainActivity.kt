@@ -6,10 +6,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.ui.graphics.Color
 import org.librehu.ota.data.AppRepository
-import org.librehu.ota.ui.AppsScreen
 import org.librehu.ota.ui.CarColors
 import org.librehu.ota.ui.CarPalette
 import org.librehu.ota.ui.CarTheme
+import org.librehu.ota.ui.MainScreen
 import org.librehu.ota.ui.ThemeFollower
 
 /** LibreHU Apps: the LibreHU apps, their versions on GitHub, install and update. */
@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         val repo = AppRepository.get(this)
         repo.refreshInstalled()
         if (System.currentTimeMillis() - repo.lastCheck > RECHECK_MS) repo.check()
-        setContent { CarTheme { AppsScreen(repo, ::open) } }
+        setContent { CarTheme { MainScreen(repo, ::open) } }
     }
 
     override fun onResume() {

@@ -49,7 +49,30 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
     car écrire sous dm-verity empêche de démarrer. Si /system reste en lecture seule, l'appli l'indique (avec ses
     points de montage) et propose le module. Pour retirer : supprimer son dossier et son fichier
     `privapp-permissions`.
-- **Vérification quotidienne** (option) avec notification des mises à jour disponibles.
+- **Installations l'une après l'autre** : « Tout mettre à jour » télécharge en parallèle (2 par défaut) puis
+  installe une appli à la fois (état « En attente »), LibreHU Apps elle-même en dernier (son processus se termine avec
+  sa propre installation). Lancer plusieurs installations en même temps faisait échouer les suivantes ou fermer
+  l'appli.
+- **Ne pas mettre à jour** (bouton sur chaque appli) : l'appli est exclue de « Tout mettre à jour », des
+  notifications et de l'installation en arrière-plan.
+- **Onglet Paramètres** : vérification en arrière-plan (activée, toutes les 6 h / 12 h / 1 j / 2 j / 7 j, Wi-Fi
+  seulement, notification, **installation automatique** en root), méthode d'installation (automatique / root
+  seulement / installateur Android), compilation après installation (speed-profile, une appli à la fois),
+  téléchargements simultanés, garder ou supprimer les APK téléchargés, **jeton GitHub** facultatif (5000 requêtes
+  par heure au lieu de 60, envoyé seulement à api.github.com), **historique** des installations, configurations et
+  flashs (date, versions avant → après, résultat).
+- **Onglet Configs** (root) : fichiers de configuration (politique audio, effets, config de la box CAN, config
+  Jancar…) et **zips recovery** :
+  - du catalogue (`configs` de [catalog.json](catalog.json)) :
+    `{"id", "name", "description", "type": "FILE" | "RECOVERY_ZIP", "url", "dest", "mode", "owner", "sha256", "reboot"}` ;
+  - ou un **fichier de l'appareil** placé à une destination au choix (raccourcis : `audio_policy_configuration.xml`,
+    `audio_effects.xml`, `can_config.json`, `ivi-customer.ini`) ;
+  - ou un **zip flashé par TWRP** : copié dans `/data/media/0/LibreHU/flash`, `install <zip>` écrit dans
+    `/cache/recovery/openrecoveryscript`, puis redémarrage en recovery (TWRP l'exécute et redémarre).
+
+  Le fichier remplacé est d'abord copié dans `/sdcard/LibreHU/backup`. La partition est remontée en écriture le
+  temps de l'opération, **sauf si elle est protégée par dm-verity** (`/dev/block/dm-*`) : rien n'est écrit, car
+  l'autoradio ne démarrerait plus ; désactiver d'abord verity (`fastboot --disable-verity flash vbmeta vbmeta.img`).
 - API GitHub sans compte : 60 requêtes par heure et par adresse IP ; une vérification en fait une par appli, la
   liste des versions une, les changements d'une version une ou deux.
 

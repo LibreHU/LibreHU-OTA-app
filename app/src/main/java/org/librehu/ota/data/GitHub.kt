@@ -141,6 +141,10 @@ object GitHub {
         }
     }
 
+    /** Personal token of the settings (5000 requests per hour instead of 60), sent to the API only. */
+    @Volatile
+    var token: String = ""
+
     fun open(url: String): HttpURLConnection =
         (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = TIMEOUT_MS
@@ -148,5 +152,6 @@ object GitHub {
             instanceFollowRedirects = true
             setRequestProperty("Accept", "application/vnd.github+json")
             setRequestProperty("User-Agent", "LibreHU-OTA")
+            if (token.isNotBlank() && URL(url).host == "api.github.com") setRequestProperty("Authorization", "Bearer ${token.trim()}")
         }
 }

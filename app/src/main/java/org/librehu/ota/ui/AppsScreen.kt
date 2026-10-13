@@ -111,7 +111,7 @@ fun AppsScreen(
                 }
                 if (updates > 0 && !busy) {
                     Pill(stringResource(R.string.update_all), selected = true) {
-                        apps.filter { it.updateAvailable }.forEach { repo.install(it.app.packageName) }
+                        repo.updateAll()
                     }
                     Spacer(Modifier.width(10.dp))
                 }
@@ -227,7 +227,11 @@ private fun AppCard(
         }
         var versions by remember { mutableStateOf(false) }
         var logs by remember { mutableStateOf(false) }
-        val working = s.task is Task.Downloading || s.task == Task.Installing
+        val working = s.task is Task.Downloading || s.task == Task.Installing || s.task == Task.Queued
+        val ignoredSet by org.librehu.ota.data.OtaSettingsStore
+            .get(LocalContext.current)
+            .collectAsStateWithLifecycle()
+        val ignored = s.app.packageName in ignoredSet.ignored
         if (!working) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (s.installed) Pill(stringResource(R.string.open), small = true) { open(s.app.packageName) }
@@ -236,6 +240,11 @@ private fun AppCard(
                 if (root && s.release != null) {
                     Pill(stringResource(R.string.system_install), small = true, icon = Icons.Default.PhonelinkSetup) {
                         repo.prepareSystem(s.app.packageName)
+                    }
+                }
+                if (s.installed) {
+                    Pill(stringResource(if (ignored) R.string.unignore else R.string.ignore), selected = ignored, small = true) {
+                        repo.setIgnored(s.app.packageName, !ignored)
                     }
                 }
             }
@@ -253,6 +262,10 @@ private fun AppCard(
 
             Task.Installing -> {
                 LinearProgressIndicator(Modifier.fillMaxWidth(), color = CarColors.Accent)
+            }
+
+            Task.Queued -> {
+                Text(stringResource(R.string.queued), color = CarColors.TextDim, fontSize = 14.sp)
             }
 
             is Task.Failed -> {
@@ -299,7 +312,7 @@ private fun Actions(
     s: AppState,
     repo: AppRepository,
 ) {
-    val working = s.task is Task.Downloading || s.task == Task.Installing
+    val working = s.task is Task.Downloading || s.task == Task.Installing || s.task == Task.Queued
     when {
         working -> {}
         s.updateAvailable -> Pill(stringResource(R.string.update), selected = true) { repo.install(s.app.packageName) }
@@ -676,7 +689,7 @@ private fun AppIcon(icon: Drawable?) {
 }
 
 @Composable
-private fun Card(content: @Composable () -> Unit) {
+internal fun Card(content: @Composable () -> Unit) {
     Column(
         modifier =
             Modifier
@@ -689,7 +702,7 @@ private fun Card(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun Pill(
+internal fun Pill(
     label: String,
     selected: Boolean = false,
     enabled: Boolean = true,

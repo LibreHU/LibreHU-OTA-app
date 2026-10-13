@@ -43,6 +43,11 @@ sealed class InstallResult {
 
 /** Download, checks and installation of an APK (root `pm install`, or Android's package installer). */
 object Installer {
+    /** One compilation at a time (several updates in a row would load the CPU for minutes otherwise). */
+    private val compiler =
+        java.util.concurrent.Executors
+            .newSingleThreadExecutor()
+
     /** Downloads [url] into the cache, [onProgress] in 0..1 (or -1 without a size). */
     fun download(
         context: Context,
@@ -104,13 +109,21 @@ object Installer {
         context: Context,
         apk: File,
         pkg: String,
+        method: org.librehu.ota.data.InstallMethod = org.librehu.ota.data.InstallMethod.AUTO,
+        compile: Boolean = true,
     ): InstallResult {
-        if (Root.isAvailable()) {
+        val useRoot =
+            when (method) {
+                org.librehu.ota.data.InstallMethod.ANDROID -> false
+                org.librehu.ota.data.InstallMethod.ROOT -> if (Root.isAvailable()) true else return InstallResult.Failed("root")
+                org.librehu.ota.data.InstallMethod.AUTO -> Root.isAvailable()
+            }
+        if (useRoot) {
             val out = Root.pmInstall(apk) ?: return InstallResult.Failed("su")
-            if (out.output.contains("Success")) {
+            if (out.output.contains("Success") && compile) {
                 // Compile now with the profile shipped in the APK (Compose's): smooth from the first start instead of
                 // after Android's overnight optimisation.
-                Thread({ Root.run("cmd package compile -m speed-profile -f $pkg", timeoutS = 300) }, "compile").start()
+                compiler.execute { Root.run("cmd package compile -m speed-profile -f $pkg", timeoutS = 300) }
             }
             return when {
                 out.output.contains("Success") -> InstallResult.Done
