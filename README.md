@@ -61,7 +61,9 @@ de [LibreHU Launcher](https://github.com/LibreHU/LibreHU-Launcher-App).
   les installations de la vérification en arrière-plan. Tant que quelque chose tourne, un service au premier plan
   (résumé : nombre d'applis, progression totale) garde LibreHU Apps en vie jusqu'à la fin.
 - **Versions installées** : chaque appli affiche sa version dans **/system** (la copie d'usine, même cachée par une
-  mise à jour) et dans **/data**, ou « non installé », à côté de celle de GitHub.
+  mise à jour) et dans **/data**, ou « non installé », à côté de celle de GitHub. La copie /system cachée est lue par
+  `PackageManager` (drapeau `MATCH_FACTORY_ONLY`, gardé seulement s'il désigne bien une partition système), sinon avec
+  root par l'APK que nomme `dumpsys package` (une fois par mise à jour, sans bloquer l'écran).
 - **Installations l'une après l'autre** : « Tout mettre à jour » télécharge en parallèle (2 par défaut) puis
   installe une appli à la fois (état « En attente »), LibreHU Apps elle-même en dernier (son processus se termine avec
   sa propre installation). Lancer plusieurs installations en même temps faisait échouer les suivantes ou fermer
