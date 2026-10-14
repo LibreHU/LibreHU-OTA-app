@@ -181,6 +181,15 @@ Android 9 (1280×720, 160 dpi, en français ; Android 11 pour LibreHU service, F
 est ARM seulement), suit `screenshots/plan.json` (ouvrir, toucher un texte, capturer) et publie les PNG dans la
 release `screenshots`. Ce sont les images des galeries des README.
 
+## Vérifier que toutes les mises à jour sont visibles
+
+`python3 tools/check_releases.py` : pour chaque appli de `catalog.json` et chaque branche publiée, vérifie que
+`latest-<branche>` a une `release.txt` lisible avec un `versionCode` et qu'elle a été construite depuis le dernier
+commit de la branche (sinon la CI a échoué ou tourne encore : LibreHU Apps montre l'ancienne version). Pour les applis à
+éditions (`librehu-service`, `ivi`, `main`), signale aussi une branche d'édition à laquelle manquent des commits de
+`main` : un correctif poussé seulement sur `main` n'arrive dans cette édition qu'une fois `main` fusionnée dedans. La
+mise à jour est proposée quand le `versionCode` publié dépasse celui installé (nombre de commits de la branche).
+
 ## Construire
 
 Action **Build** (artefact et release `latest-main`), ou `./gradlew :app:assembleDebug` avec le SDK Android.
