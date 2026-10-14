@@ -81,5 +81,13 @@
             android:name=".CheckJob"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+        <!-- LibreHU Launcher's first start: root asked for every LibreHU app at once (RootRequestReceiver). -->
+        <receiver
+            android:name=".RootRequestReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="org.librehu.action.REQUEST_ROOT" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
