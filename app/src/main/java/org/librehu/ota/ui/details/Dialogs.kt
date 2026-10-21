@@ -337,3 +337,64 @@ fun BulkSystemDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },
     )
 }
+
+/**
+ * Uninstall of [s]: from /data (the app and its data, or the update of a system app), from /system (root, after a
+ * reboot) or both; only the places where it is are offered.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun UninstallDialog(
+    s: AppState,
+    repo: AppRepository,
+    root: Boolean,
+    onDismiss: () -> Unit,
+) {
+    val inData = s.dataCode != null
+    val inSystem = s.systemCode != null && root
+    var data by remember { mutableStateOf(inData) }
+    var system by remember { mutableStateOf(!inData && inSystem) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.uninstall_title, s.app.name)) },
+        text = {
+            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (inData) {
+                        Pill(stringResource(R.string.uninstall_data), selected = data && !system, small = true) {
+                            data = true
+                            system = false
+                        }
+                    }
+                    if (inSystem) {
+                        Pill(stringResource(R.string.uninstall_system), selected = system && !data, small = true) {
+                            data = false
+                            system = true
+                        }
+                    }
+                    if (inData && inSystem) {
+                        Pill(stringResource(R.string.uninstall_both), selected = data && system, small = true) {
+                            data = true
+                            system = true
+                        }
+                    }
+                }
+                if (data) {
+                    Text(stringResource(if (s.systemCode != null && !system) R.string.uninstall_data_update else R.string.uninstall_data_text))
+                }
+                if (system) {
+                    Text(stringResource(R.string.uninstall_system_text))
+                    Text(stringResource(R.string.uninstall_system_warning), color = WarningColor, fontSize = 13.sp)
+                }
+                if (s.systemCode != null && !root) Hint(stringResource(R.string.uninstall_system_root))
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = data || system, onClick = {
+                repo.uninstall(s.app.packageName, data, system)
+                onDismiss()
+            }) { Text(stringResource(R.string.uninstall), color = ErrorColor) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },
+    )
+}

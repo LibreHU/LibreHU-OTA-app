@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.PhonelinkSetup
@@ -82,6 +83,7 @@ fun AppDetailsScreen(
     var root by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { root = withContext(Dispatchers.IO) { Root.isAvailable() } }
     var logs by remember { mutableStateOf(false) }
+    var uninstall by remember { mutableStateOf(false) }
     val ignored = pkg in settings.ignored
 
     LazyColumn(
@@ -119,6 +121,9 @@ fun AppDetailsScreen(
                                 repo.setIgnored(pkg, !ignored)
                             }
                         }
+                        if (s.dataCode != null || s.systemCode != null) {
+                            Pill(stringResource(R.string.uninstall), small = true, icon = Icons.Default.Delete) { uninstall = true }
+                        }
                         if (s.task != org.librehu.ota.data.Task.Idle) Pill(stringResource(R.string.dismiss), small = true) { repo.dismiss(pkg) }
                     }
                 }
@@ -152,6 +157,7 @@ fun AppDetailsScreen(
         item { VersionsCard(s, repo, root) }
     }
     if (logs) LogsDialog(s, repo) { logs = false }
+    if (uninstall) UninstallDialog(s, repo, root) { uninstall = false }
 }
 
 /**

@@ -447,7 +447,7 @@ class AppRepository private constructor(
                         toRecovery(
                             pkg,
                             apk,
-                            OtaSettingsStore.value(context).copy(systemAlsoData = false),
+                            OtaSettingsStore.value(context),
                             state,
                             plan.recommendPrivApp,
                             plan,
@@ -534,7 +534,7 @@ class AppRepository private constructor(
             if (result is InstallResult.ReadOnly) {
                 setTask(pkg, task.copy(plan = task.plan.copy(readOnly = result.detail)))
             } else {
-                onInstallResult(pkg, result)
+                systemDone(pkg, task.apk, task.plan, result)
             }
         }
     }
@@ -562,6 +562,12 @@ class AppRepository private constructor(
                 }.getOrElse { Configs.Outcome.Failed(it.message ?: it.javaClass.simpleName) }
             if (outcome is Configs.Outcome.Done) {
                 History.add(context, s.app.name, "/system (TWRP)", true, outcome.detail)
+                // Also in /data first (setting); not LibreHU Apps itself, whose process would end before the reboot: at
+                // boot Android drops an older /data copy under a newer /system one.
+                val st = OtaSettingsStore.value(context)
+                if (st.systemAlsoData && !task.plan.otherSignature && pkg != context.packageName) {
+                    Installer.install(context, task.apk, pkg, InstallMethod.ROOT, st.compile)
+                }
                 setTask(pkg, Task.RebootNeeded)
                 Configs.rebootRecovery()
             } else {
@@ -569,6 +575,93 @@ class AppRepository private constructor(
                 History.add(context, s.app.name, "/system (TWRP)", false, reason)
                 setTask(pkg, Task.Failed(reason))
             }
+        }
+    }
+
+    /**
+     * After a /system install by hand: the same APK in /data too (setting "Also in /data", on by default), so that the
+     * new version runs at once and stays an update of the /system copy. LibreHU Apps itself last: its process ends.
+     */
+    private fun systemDone(
+        pkg: String,
+        apk: File,
+        plan: SystemInstall.Plan,
+        result: InstallResult,
+    ) {
+        val st = OtaSettingsStore.value(context)
+        val data = result == InstallResult.RebootNeeded && st.systemAlsoData && !plan.otherSignature
+        if (data && pkg != context.packageName) Installer.install(context, apk, pkg, InstallMethod.ROOT, st.compile)
+        // onInstallResult may delete the downloaded APK
+        val self = if (data && pkg == context.packageName) apk.copyTo(File(context.cacheDir, "apk/self-data.apk"), overwrite = true) else null
+        onInstallResult(pkg, result)
+        self?.let { Installer.install(context, it, pkg, InstallMethod.ROOT, st.compile) }
+    }
+
+    /**
+     * Uninstalls [pkg] from /data ([data]: the app and its data, or the update of a system app, which then runs its
+     * /system version again) and / or from /system ([system], root: gone after a reboot; the module LibreHU Apps made,
+     * else the files in the partition, else a TWRP zip when the eMMC refuses the write). Both: nothing left after the
+     * reboot. LibreHU Apps itself: /data last, its process ends there.
+     */
+    fun uninstall(
+        pkg: String,
+        data: Boolean,
+        system: Boolean,
+    ) {
+        if (busyTask(pkg)) return
+        val state = _apps.value.firstOrNull { it.app.packageName == pkg } ?: return
+        scope.launch {
+            setTask(pkg, Task.Installing)
+            var reboot = false
+            if (system) {
+                var r = SystemInstall.remove(pkg)
+                if (r == InstallResult.ReadOnly(SystemInstall.WRITE_PROTECTED)) {
+                    // Blocks refused by the eMMC here: TWRP removes it at the next reboot into the recovery (not under
+                    // dm-verity, whose reason is shown instead)
+                    val zip = SystemInstall.recoveryRemoveZip(context, pkg)
+                    val outcome =
+                        if (zip == null) {
+                            Configs.Outcome.Failed("/system")
+                        } else {
+                            runCatching {
+                                try {
+                                    zip.inputStream().use { Configs.flash(it, zip.name, append = pendingRecovery.value.isNotEmpty()) }
+                                } finally {
+                                    zip.delete()
+                                }
+                            }.getOrElse { Configs.Outcome.Failed(it.message ?: it.javaClass.simpleName) }
+                        }
+                    r =
+                        if (outcome is Configs.Outcome.Done) {
+                            addPendingRecovery(state.app.name)
+                            InstallResult.RebootNeeded
+                        } else {
+                            InstallResult.Failed((outcome as Configs.Outcome.Failed).reason)
+                        }
+                }
+                History.add(context, state.app.name, context.getString(org.librehu.ota.R.string.uninstall_system), r == InstallResult.RebootNeeded, r.toString())
+                if (r != InstallResult.RebootNeeded) {
+                    setTask(pkg, Task.Failed((r as? InstallResult.Failed)?.message ?: (r as? InstallResult.ReadOnly)?.detail ?: r.toString()))
+                    return@launch
+                }
+                reboot = true
+            }
+            if (data) {
+                val self = pkg == context.packageName
+                if (self) setTask(pkg, if (reboot) Task.RebootNeeded else Task.Idle)
+                val ok = Installer.uninstall(context, pkg)
+                if (Root.isAvailable()) {
+                    History.add(context, state.app.name, context.getString(org.librehu.ota.R.string.uninstall_data), ok, if (ok) "OK" else "pm uninstall")
+                    if (!ok) {
+                        setTask(pkg, Task.Failed("pm uninstall"))
+                        return@launch
+                    }
+                } else {
+                    waitUninstalled(pkg)
+                }
+            }
+            refreshInstalled()
+            setTask(pkg, if (reboot) Task.RebootNeeded else Task.Idle)
         }
     }
 

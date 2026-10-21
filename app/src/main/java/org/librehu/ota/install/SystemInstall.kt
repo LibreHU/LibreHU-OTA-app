@@ -293,6 +293,84 @@ object SystemInstall {
         exit 0
         """.trimIndent() + "\n"
 
+    /**
+     * Removes the /system copy of [pkg], gone after a reboot: the root module LibreHU Apps made (marked `remove`, the
+     * root manager deletes it at boot), else the directory in the partition and its privapp-permissions whitelist.
+     * [InstallResult.ReadOnly] when the partition cannot be written ([WRITE_PROTECTED]: [recoveryRemoveZip] does it).
+     * Only copies under /system (not /product, /vendor).
+     */
+    fun remove(pkg: String): InstallResult {
+        if (!Root.isAvailable()) return InstallResult.Failed("root")
+        val id = "librehu_" + pkg.replace('.', '_')
+        val module = Root.run("[ -d /data/adb/modules/$id ] && touch /data/adb/modules/$id/remove && echo OK")?.output.orEmpty()
+        if (module.contains("OK")) return InstallResult.RebootNeeded
+        val rel = systemRel(pkg) ?: return InstallResult.Failed("/system: $pkg")
+        val xml = "\$S/etc/permissions/privapp-permissions-$pkg.xml"
+        val out =
+            Root.run(
+                "${RwMount.LIB}\nif ! rw_open /system; then exit $READ_ONLY_EXIT; fi\nS=\$RW\n" +
+                    "rm -rf \"\$S/$rel\" && rm -f \"$xml\" && [ ! -e \"\$S/$rel\" ] && sync\ne=\$?\nrw_close\nexit \$e",
+            ) ?: return InstallResult.Failed("su")
+        return when {
+            out.exit == 0 -> InstallResult.RebootNeeded
+            out.exit == READ_ONLY_EXIT -> InstallResult.ReadOnly(readOnlyReason(out.output))
+            IO_ERROR.containsMatchIn(out.output) -> InstallResult.ReadOnly(WRITE_PROTECTED)
+            else -> InstallResult.Failed(out.output.ifEmpty { "exit ${out.exit}" })
+        }
+    }
+
+    /** Zip for TWRP doing what [remove] does in the partition; null when [pkg] has no copy under /system. */
+    fun recoveryRemoveZip(
+        context: Context,
+        pkg: String,
+    ): File? {
+        val rel = systemRel(pkg) ?: return null
+        val zip = File(context.cacheDir, "apk/librehu-remove-$pkg.zip")
+        zip.parentFile?.mkdirs()
+        val script =
+            """
+            #!/sbin/sh
+            # LibreHU Apps: remove $pkg from /system/$rel
+            OUTFD=${'$'}2
+            ui() { echo "ui_print ${'$'}1" > /proc/self/fd/${'$'}OUTFD; echo "ui_print" > /proc/self/fd/${'$'}OUTFD; }
+            fail() { ui "ERREUR : ${'$'}1"; umount /librehu_system 2>/dev/null; exit 1; }
+            ui "LibreHU Apps : suppression de /system/$rel"
+            DEV=""
+            for d in /dev/block/platform/bootdevice/by-name/system /dev/block/by-name/system /dev/block/platform/*/by-name/system; do
+              [ -e "${'$'}d" ] && DEV=${'$'}d && break
+            done
+            [ -n "${'$'}DEV" ] || fail "partition system introuvable"
+            umount /system_root 2>/dev/null; umount /system 2>/dev/null
+            mkdir -p /librehu_system
+            blockdev --setrw "${'$'}DEV" 2>/dev/null
+            mount -t ext4 -o rw "${'$'}DEV" /librehu_system || fail "montage de system en ecriture impossible"
+            S=/librehu_system/system; [ -f ${'$'}S/build.prop ] || S=/librehu_system
+            [ -f ${'$'}S/build.prop ] || fail "build.prop absent de la partition system"
+            rm -rf "${'$'}S/$rel"; rm -f "${'$'}S/etc/permissions/privapp-permissions-$pkg.xml"
+            [ -e "${'$'}S/$rel" ] && fail "suppression impossible"
+            sync; umount /librehu_system
+            ui "Termine : $pkg n'est plus dans /system."
+            exit 0
+            """.trimIndent() + "\n"
+        ZipOutputStream(zip.outputStream()).use { z ->
+            z.putNextEntry(ZipEntry("META-INF/com/google/android/update-binary"))
+            z.write(script.toByteArray())
+            z.closeEntry()
+            z.putNextEntry(ZipEntry("META-INF/com/google/android/updater-script"))
+            z.write("# LibreHU Apps\n".toByteArray())
+            z.closeEntry()
+        }
+        return zip
+    }
+
+    /** Path of the /system copy of [pkg] relative to /system (`priv-app/X`, `app/X.apk`…), checked; null without one. */
+    private fun systemRel(pkg: String): String? =
+        systemCopy(pkg)
+            ?.trimEnd('/')
+            ?.takeIf { it.startsWith("/system/") && Regex("[A-Za-z0-9_./-]+").matches(it) && !it.contains("..") }
+            ?.removePrefix("/system/")
+            ?.takeIf { it.startsWith("app/") || it.startsWith("priv-app/") }
+
     private fun whitelist(
         pkg: String,
         permissions: List<String>,

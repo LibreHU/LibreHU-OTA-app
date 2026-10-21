@@ -136,7 +136,7 @@
     <string name="set_system_way_module">Module root</string>
     <string name="set_system_way_direct">Écrit dans /system</string>
     <string name="set_system_data">Aussi dans /data (active tout de suite)</string>
-    <string name="set_system_data_hint">La nouvelle version tourne sans attendre le redémarrage ; /system l\'a dès le démarrage suivant (même clé de signature nécessaire).</string>
+    <string name="set_system_data_hint">Chaque installation ou mise à jour dans /system (automatique, à la main, par TWRP, groupée) installe aussi le même APK dans /data : la nouvelle version tourne sans attendre le redémarrage ; /system l\'a dès le démarrage suivant (même clé de signature nécessaire).</string>
     <string name="zips_hint">Zips flashables de LibreHU-flashablesZips, par catégorie. Flashés par TWRP au prochain démarrage en recovery (TWRP nécessaire : catégorie Recovery) ; une image peut aussi être écrite directement dans sa partition. Root.</string>
     <string name="zips_error">Index non reçu : %1$s</string>
     <string name="zips_all">Toutes</string>
@@ -229,4 +229,14 @@
     <string name="reboot_recovery">Redémarrer dans TWRP</string>
     <string name="offline_never">Pas de réseau : aucune liste pour l\'instant</string>
     <string name="offline_cached">Pas de réseau : liste du %1$s</string>
+    <string name="uninstall">Désinstaller</string>
+    <string name="uninstall_title">Désinstaller %1$s</string>
+    <string name="uninstall_data">/data</string>
+    <string name="uninstall_system">/system</string>
+    <string name="uninstall_both">Les deux</string>
+    <string name="uninstall_data_text">L\'appli et ses données sont supprimées de /data.</string>
+    <string name="uninstall_data_update">La mise à jour dans /data et ses données sont supprimées : la version de /system reprend la main tout de suite.</string>
+    <string name="uninstall_system_text">La copie de /system est retirée au prochain redémarrage : module root supprimé, ou fichiers effacés de la partition, ou par TWRP quand la mémoire refuse l\'écriture (redémarrage en recovery demandé ensuite). Une copie dans /data reste installée comme appli normale.</string>
+    <string name="uninstall_system_warning">Une appli d\'origine de la ROM retirée de /system ne revient qu\'en reflashant /system.</string>
+    <string name="uninstall_system_root">Retirer la copie de /system demande le root.</string>
 </resources>

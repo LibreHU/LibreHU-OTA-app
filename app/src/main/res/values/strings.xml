@@ -136,7 +136,7 @@
     <string name="set_system_way_module">Root module</string>
     <string name="set_system_way_direct">Written in /system</string>
     <string name="set_system_data">Also in /data (runs at once)</string>
-    <string name="set_system_data_hint">The new version runs without waiting for the reboot; /system has it from the next start (same signing key needed).</string>
+    <string name="set_system_data_hint">Every install or update in /system (automatic, by hand, by TWRP, in bulk) also installs the same APK in /data: the new version runs without waiting for the reboot; /system has it from the next start (same signing key needed).</string>
     <string name="zips_hint">Flashable zips of LibreHU-flashablesZips, by category. Flashed by TWRP at the next start in recovery (TWRP needed: Recovery category); an image can also be written straight to its partition. Root.</string>
     <string name="zips_error">Index not received: %1$s</string>
     <string name="zips_all">All</string>
@@ -229,4 +229,14 @@
     <string name="reboot_recovery">Restart into TWRP</string>
     <string name="offline_never">No network: no list yet</string>
     <string name="offline_cached">No network: list of %1$s</string>
+    <string name="uninstall">Uninstall</string>
+    <string name="uninstall_title">Uninstall %1$s</string>
+    <string name="uninstall_data">/data</string>
+    <string name="uninstall_system">/system</string>
+    <string name="uninstall_both">Both</string>
+    <string name="uninstall_data_text">The app and its data are removed from /data.</string>
+    <string name="uninstall_data_update">The update in /data and its data are removed: the /system version runs again at once.</string>
+    <string name="uninstall_system_text">The /system copy is removed at the next reboot: root module removed, or files deleted from the partition, or by TWRP when the memory refuses the write (reboot into the recovery asked then). A copy in /data stays installed as a normal app.</string>
+    <string name="uninstall_system_warning">A ROM\'s own app removed from /system only comes back by flashing /system again.</string>
+    <string name="uninstall_system_root">Removing the /system copy needs root.</string>
 </resources>

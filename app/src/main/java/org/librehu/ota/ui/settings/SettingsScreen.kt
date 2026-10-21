@@ -170,9 +170,10 @@ fun SettingsScreen(repo: AppRepository) {
                         s.systemWay,
                     ) { v -> set { it.copy(systemWay = v) } }
                     Hint(stringResource(R.string.set_system_way_hint))
-                    SwitchLine(stringResource(R.string.set_system_data), s.systemAlsoData, stringResource(R.string.set_system_data_hint)) { on ->
-                        set { it.copy(systemAlsoData = on) }
-                    }
+                }
+                // Every /system install: automatic, by hand, by TWRP, in bulk
+                SwitchLine(stringResource(R.string.set_system_data), s.systemAlsoData, stringResource(R.string.set_system_data_hint), enabled = root == true) { on ->
+                    set { it.copy(systemAlsoData = on) }
                 }
             }
         }

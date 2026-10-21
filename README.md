@@ -14,7 +14,7 @@ vérification, bouton Vérifier).
 |---|---|
 | **Applis** | tuiles en deux sections, *Installées* puis *À installer* : icône, version, pastille d'état (À jour, Mise à jour, Non installée, Téléchargement…), action principale (Installer / Mettre à jour / Ouvrir, ou anneau de progression avec pause et annulation) ; toucher une tuile ouvre sa fiche |
 | **Mises à jour** (badge : leur nombre) | nombre et **Tout mettre à jour**, une ligne par appli (versions avant → après, taille, date, nouveautés dépliables avec les commits), les mises à jour ignorées à part |
-| **Fiche d'une appli** | en-tête (icône, paquet, dépôt, état), actions (Ouvrir, Réinstaller, Journal, Installer dans /system, Ne pas mettre à jour), avancement, versions dans /data et /system, version GitHub, branche, date, taille, nouveautés et commits, **toutes les versions** (chargées à la demande : une requête GitHub) à installer, revenir à une plus ancienne ou mettre dans /system |
+| **Fiche d'une appli** | en-tête (icône, paquet, dépôt, état), actions (Ouvrir, Réinstaller, Journal, Installer dans /system, Ne pas mettre à jour, **Désinstaller** : /data, /system ou les deux), avancement, versions dans /data et /system, version GitHub, branche, date, taille, nouveautés et commits, **toutes les versions** (chargées à la demande : une requête GitHub) à installer, revenir à une plus ancienne ou mettre dans /system |
 | **Zips** | deux onglets : *Zips flashables* et *Fichiers de configuration* |
 | **Téléchargements** (badge : ceux en cours) | en cours ou en pause (avancement, débit, temps restant, pause / reprise / annulation), terminés ou en échec, puis l'**historique** |
 | **Réglages** | sections Général (édition, root), Vérifications, Installation, /system, Sources (jeton GitHub, index des zips), Stockage, À propos |
@@ -92,8 +92,24 @@ installation (`install/`) n'ont pas changé.
     avec Magisk, dont le tmpfs sur `/system/priv-app` perdrait l'écriture), une seconde montée privée du bloc ; sur
     l'UJC201 elle donnait des erreurs d'E/S là où `adb remount` marche. Refusé si la partition est sous dm-verity
     (bloc esclave d'un `dm-*`) : l'appli l'indique avec la commande à lancer soi-même
-    (`fastboot --disable-verity flash vbmeta vbmeta.img`) et propose le module ou TWRP. Pour retirer : supprimer son
-    dossier et son fichier `privapp-permissions`.
+    (`fastboot --disable-verity flash vbmeta vbmeta.img`) et propose le module ou TWRP. Pour retirer : bouton
+    **Désinstaller › /system** (voir plus bas).
+  - **Aussi dans /data** (Réglages › /system, activé par défaut) : chaque installation ou mise à jour dans /system
+    (automatique, à la main, par TWRP, groupée) installe aussi le même APK dans /data, en root : la nouvelle version
+    tourne tout de suite et reste une mise à jour de la copie /system. Pas quand l'appli de /data est signée avec une
+    autre clé. LibreHU Apps elle-même : installée dans /data en dernier (son processus se termine là) ; par TWRP à la
+    main, elle n'y va pas (le redémarrage en recovery arriverait après la fin de son processus) : au démarrage, Android
+    retire de lui-même une copie /data plus ancienne que celle de /system.
+- **Désinstaller** (fiche de l'appli) : seulement les endroits où l'appli est :
+  - **/data** : l'appli et ses données (`pm uninstall` en root, sinon la demande d'Android) ; pour une appli système
+    mise à jour, seule la mise à jour part et la version de /system reprend la main ;
+  - **/system** (root) : retirée au prochain redémarrage : module `librehu_<paquet>` marqué `remove` (le gestionnaire
+    root le supprime au démarrage ; une copie d'origine masquée par `.replace` réapparaît), sinon dossier et liste
+    blanche `privapp-permissions` effacés de la partition (même écriture que ci-dessus), sinon, quand la mémoire
+    refuse l'écriture, un zip TWRP mis en attente (bandeau « Redémarrer dans TWRP »). Sous dm-verity rien n'est
+    écrit (la raison est affichée). Une copie dans /data reste, comme appli normale. Une appli d'origine de la ROM
+    retirée ne revient qu'en reflashant /system ;
+  - **les deux** : /system d'abord, puis /data ; plus rien après le redémarrage.
 - **Téléchargements** : débit (lissé sur ~2 s), quantité reçue / taille, pourcentage et **temps restant** sur la tuile, la ligne de mise à jour, la fiche et la page Téléchargements ; **pause / reprise** (le morceau reçu est gardé, reprise par requête HTTP `Range` avec
   `If-Range` sur l'ETag : un fichier remplacé sur GitHub repart de zéro ; taille vérifiée à la fin) et annulation.
 - **Notifications** (Réglages, activées par défaut) : une par appli pendant le téléchargement (progression, débit,
@@ -120,8 +136,8 @@ installation (`install/`) n'ont pas changé.
   « Tout mettre à jour », arrière-plan) vont dans `/system/priv-app` ou `/system/app` selon le besoin de l'appli,
   pour les applis déjà dans /system ou pour toutes ; par module root, par écriture dans /system, ou automatique
   (module si le gestionnaire root le monte, sinon écriture, et module en secours si /system reste en lecture seule).
-  Option « aussi dans /data » (activée) : la nouvelle version tourne tout de suite, /system l'a au démarrage suivant.
-  Si /system refuse, l'installation normale dans /data se fait à la place (noté dans l'historique). LibreHU Apps
+  Option « aussi dans /data » (activée, vaut pour toutes les installations dans /system) : la nouvelle version tourne
+  tout de suite, /system l'a au démarrage suivant. Si /system refuse, l'installation normale dans /data se fait à la place (noté dans l'historique). LibreHU Apps
   elle-même reste dans /data.
 - **Zips › Fichiers de configuration** (root) : fichiers de configuration (politique audio, effets, config de la box CAN, config
   Jancar…) et **zips recovery** :
