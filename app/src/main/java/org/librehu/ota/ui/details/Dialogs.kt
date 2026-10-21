@@ -274,7 +274,8 @@ fun BulkSystemDialog(
 ) {
     val apps by repo.apps.collectAsStateWithLifecycle()
     val self = LocalContext.current.packageName
-    val candidates = apps.filter { it.release != null && it.app.packageName != self }
+    // LibreHU Apps too (last): the zips only run in TWRP, after this process is gone
+    val candidates = apps.filter { it.release != null }.sortedBy { it.app.packageName == self }
     var picked by remember {
         mutableStateOf(candidates.filter { it.systemCode != null && it.updateAvailable }.map { it.app.packageName }.toSet())
     }

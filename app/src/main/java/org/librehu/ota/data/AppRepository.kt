@@ -315,7 +315,8 @@ class AppRepository private constructor(
         apk: File,
         s: OtaSettings,
     ): Boolean {
-        if (pkg == context.packageName || !Root.isAvailable()) return false
+        // LibreHU Apps itself as well: installed last (install()), its /system copy is used from the next start
+        if (!Root.isAvailable()) return false
         val state = _apps.value.firstOrNull { it.app.packageName == pkg } ?: return false
         val plan = SystemInstall.plan(context, apk, pkg)
         if (s.systemScope == SystemScope.SYSTEM_APPS && plan.current == null && !state.systemApp) return false

@@ -84,7 +84,7 @@ installation (`install/`) n'ont pas changé.
   - **Flash groupé par TWRP** (bouton « Flasher dans /system (TWRP) » de la barre du haut) : plusieurs applis cochées
     d'un coup (raccourcis : applis système, mises à jour, aucune), chacune avec sa version actuelle : mise à jour,
     réinstallation de la même version (réparation) ou première installation, en priv-app ou app selon son plan.
-    Toutes écrites au même redémarrage dans TWRP.
+    Toutes écrites au même redémarrage dans TWRP, LibreHU Apps comprise (en dernier de la liste).
   - **Écrire dans /system** : comme `adb remount` : le vrai bloc (`by-name/system`) est rendu inscriptible
     (`blockdev --setrw`), puis le montage qu'Android utilise (`/` en system-as-root, qui apparaît comme `/dev/root`)
     est remonté en écriture sur place, gardé seulement si un fichier de test s'écrit ; remis en lecture seule ensuite.
