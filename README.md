@@ -140,7 +140,7 @@ installation (`install/`) n'ont pas changé.
   - **Flasher avec TWRP** : téléchargé, SHA-256 vérifié, puis même chemin que les fichiers de configuration (OpenRecoveryScript
     et redémarrage en recovery). Le zip refuse lui-même un autre appareil et s'arrête sans rien écrire si la
     partition qu'il modifie est sous dm-verity actif.
-  - **Écrire dans `<partition>` maintenant** (zips accompagnés d'une image, TWRP par exemple) : sans passer par la
+  - **Écrire dans `<partition>` maintenant** (zips accompagnés d'une image : TWRP, noyaux LibreHU) : sans passer par la
     recovery ; partition trouvée dans `by-name`, taille vérifiée, partition actuelle copiée dans
     `/sdcard/LibreHU/backup`, image écrite puis relue et comparée (SHA-256).
   - **Annuler** : flashe le zip de restauration associé (caché de la liste).
