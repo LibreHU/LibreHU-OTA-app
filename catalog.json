@@ -88,6 +88,17 @@
       "tagged": false
     },
     {
+      "id": "disc",
+      "name": "LibreHU Disc",
+      "repo": "LibreHU/LibreHU-disc-app",
+      "package": "org.librehu.disc",
+      "description": "CD / DVD USB",
+      "branches": [
+        "main"
+      ],
+      "tagged": false
+    },
+    {
       "id": "viper",
       "name": "ViPER4Android LibreHU",
       "repo": "LibreHU/LibreHU-ViPER4Android-app",

@@ -68,6 +68,7 @@ object Catalog {
             CatalogApp("widgets", "LibreHU Widgets", "LibreHU/LibreHU-widget-app", "org.librehu.widgets", branches = ALL),
             CatalogApp("btnremap", "LibreHU Touches", "LibreHU/LibreHU-BtnRemap-app", "org.librehu.btnremap", branches = ALL),
             CatalogApp("easysource", "LibreHU EasySource", "LibreHU/LibreHU-EasySource-app", "org.librehu.easysource"),
+            CatalogApp("disc", "LibreHU Disc", "LibreHU/LibreHU-disc-app", "org.librehu.disc", "CD / DVD USB"),
             CatalogApp(
                 "viper",
                 "ViPER4Android LibreHU",
