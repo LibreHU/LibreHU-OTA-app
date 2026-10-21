@@ -99,7 +99,7 @@ object GitHub {
             } catch (e: NotFoundException) {
                 return null
             }
-        return parse(r)
+        return parse(r, app)
     }
 
     /**
@@ -168,21 +168,30 @@ object GitHub {
         return (0 until list.length())
             .map { list.getJSONObject(it) }
             .filter { !it.optBoolean("draft") && it.optString("tag_name").startsWith(prefix) }
-            .mapNotNull(::parse)
+            .filter { !app.tagged || !it.optBoolean("prerelease") }
+            .mapNotNull { parse(it, app) }
             .sortedByDescending { it.versionCode }
     }
 
-    private fun parse(r: JSONObject): Release? {
+    private fun parse(
+        r: JSONObject,
+        app: CatalogApp,
+    ): Release? {
         val assets = r.optJSONArray("assets") ?: return null
+        val pattern = app.asset.takeIf { it.isNotBlank() }?.let { runCatching { Regex(it) }.getOrNull() ?: return null }
         for (j in 0 until assets.length()) {
             val a = assets.getJSONObject(j)
             val name = a.optString("name")
             if (!name.endsWith(".apk")) continue
+            val match = pattern?.let { it.find(name) ?: continue }
             val notes = parseNotes(r.optString("body"))
             val tag = r.optString("tag_name")
             return Release(
                 tag = tag,
-                versionCode = notes["versionCode"]?.toLongOrNull() ?: 0,
+                versionCode =
+                    notes["versionCode"]?.toLongOrNull()
+                        ?: match?.groupValues?.getOrNull(1)?.toLongOrNull()
+                        ?: 0,
                 versionName = notes["versionName"] ?: tag,
                 apkUrl = a.getString("browser_download_url"),
                 apkName = name,

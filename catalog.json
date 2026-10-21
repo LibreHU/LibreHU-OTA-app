@@ -143,6 +143,18 @@
       "tagged": false
     },
     {
+      "id": "kernelsu-next",
+      "name": "KernelSU Next",
+      "repo": "KernelSU-Next/KernelSU-Next",
+      "package": "com.rifsxd.ksunext",
+      "description": "Root du noyau LibreHU",
+      "branches": [
+        "main"
+      ],
+      "tagged": true,
+      "asset": "^KernelSU_Next_v[0-9.]+_([0-9]+)-release\\.apk$"
+    },
+    {
       "id": "ota",
       "name": "LibreHU Apps (OTA)",
       "repo": "LibreHU/LibreHU-OTA-app",

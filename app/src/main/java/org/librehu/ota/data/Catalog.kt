@@ -27,8 +27,13 @@ data class CatalogApp(
     val description: String = "",
     /** Branches published as `latest-<branch>` releases; the first one is used when the edition's is missing. */
     val branches: List<String> = listOf("main"),
-    /** Classic releases (tags, newest first) instead of rolling `latest-<branch>` ones. */
+    /** Classic releases (tags, newest first) instead of rolling `latest-<branch>` ones; prereleases skipped. */
     val tagged: Boolean = false,
+    /**
+     * Regex the APK of a release must match, for a repository publishing several (KernelSU Next: normal and spoofed);
+     * its first group, if any, is the versionCode when the release notes do not give one. Empty: the first APK.
+     */
+    val asset: String = "",
 ) {
     fun branchFor(edition: Edition): String = if (edition.branch in branches) edition.branch else branches.first()
 
@@ -43,6 +48,7 @@ data class CatalogApp(
                 description = o.optString("description"),
                 branches = if (b == null) listOf("main") else List(b.length()) { b.getString(it) },
                 tagged = o.optBoolean("tagged", false),
+                asset = o.optString("asset"),
             )
         }
 
@@ -58,6 +64,9 @@ object Catalog {
     const val REMOTE_URL = "https://raw.githubusercontent.com/LibreHU/LibreHU-OTA-app/main/catalog.json"
 
     private val ALL = listOf("librehu-service", "ivi", "main")
+
+    /** KernelSU_Next_<versionName>_<versionCode>-release.apk (manager/app/build.gradle.kts), not the -spoofed one. */
+    private const val KSU_NEXT_APK = "^KernelSU_Next_v[0-9.]+_([0-9]+)-release\\.apk$"
 
     val BUILT_IN =
         listOf(
@@ -90,6 +99,15 @@ object Catalog {
                 "org.librehu.carplay",
                 branches = listOf("master"),
             ),
+            CatalogApp(
+                "kernelsu-next",
+                "KernelSU Next",
+                "KernelSU-Next/KernelSU-Next",
+                "com.rifsxd.ksunext",
+                "Root du noyau LibreHU",
+                tagged = true,
+                asset = KSU_NEXT_APK,
+            ),
             CatalogApp("ota", "LibreHU Apps (OTA)", "LibreHU/LibreHU-OTA-app", "org.librehu.ota"),
         )
 
@@ -107,7 +125,8 @@ object Catalog {
                                 .put("package", a.packageName)
                                 .put("description", a.description)
                                 .put("branches", JSONArray(a.branches))
-                                .put("tagged", a.tagged),
+                                .put("tagged", a.tagged)
+                                .put("asset", a.asset),
                         )
                     }
                 },

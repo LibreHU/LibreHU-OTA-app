@@ -34,7 +34,11 @@ installation (`install/`) n'ont pas changé.
 - **Catalogue** : [catalog.json](catalog.json) de ce dépôt (téléchargé à chaque vérification), avec une copie
   intégrée à l'appli quand GitHub n'est pas joignable. Pour ajouter une appli : une entrée dans ce fichier. Il
   comprend les forks LibreHU d'Open Headunit (« Android Auto », `LibreHU/LibreHU-open-headunit-app`) et de
-  xcertplay (« CarPlay », `LibreHU/LibreHU-xcertplay-app`, branche `master`).
+  xcertplay (« CarPlay », `LibreHU/LibreHU-xcertplay-app`, branche `master`), et **KernelSU Next** (gestionnaire du root du noyau LibreHU), pris
+  sur son dépôt officiel `KernelSU-Next/KernelSU-Next` : `"tagged": true` (releases classiques, la plus récente
+  hors pré-releases) et `"asset"`, expression régulière de l'APK à prendre (l'APK normal, pas le `-spoofed`), dont le
+  premier groupe donne le `versionCode` (`KernelSU_Next_v3.4.2_33355-release.apk` → 33355) quand les notes de la
+  release n'en donnent pas. Signé par ses auteurs, pas avec la clé LibreHU.
 - **Releases** : chaque dépôt publie, à chaque push, une pré-release continue par branche (`latest-<branche>`) avec
   l'APK et sa version dans les notes (`versionCode=…`, `versionName=…`), par l'étape « Rolling release » de son
   workflow `build.yml`. Il garde aussi les **15 dernières compilations** de chaque branche, en releases numérotées
