@@ -41,7 +41,7 @@ jobs:
             echo "LIBREHU_KEYSTORE=$RUNNER_TEMP/librehu.jks" >> "$GITHUB_ENV"
           fi
 
-      - name: Build APK (debug)
+      - name: Build APK (release, R8)
         run: ./gradlew --no-daemon :app:assembleRelease
 
       - name: Upload APK
@@ -50,6 +50,15 @@ jobs:
           name: LibreHU-OTA-${{ github.sha }}
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
+
+      - name: Upload the R8 reports
+        # usage.txt lists the code R8 removed (first place to look for a "class / method not found" crash),
+        # configuration.txt the rules applied; no mapping needed, the code is not renamed (proguard-rules.pro).
+        uses: actions/upload-artifact@v4
+        with:
+          name: LibreHU-OTA-r8-${{ github.sha }}
+          path: app/build/outputs/mapping/release/
+          if-no-files-found: warn
 
       - name: Rolling release of the branch (LibreHU OTA)
         if: github.event_name == 'push'

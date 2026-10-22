@@ -41,11 +41,13 @@ android {
 
     buildTypes {
         getByName("debug") { signingConfig = signingConfigs.getByName("librehu") }
-        // What the CI publishes: not debuggable, so that ART compiles it fully (Compose is much slower in a debug
-        // build). No R8: reflection on hidden APIs and AIDL stay as they are.
+        // What the CI publishes: not debuggable, so that ART compiles it fully, and optimised by R8 (code and
+        // resources shrunk, without renaming: proguard-rules.pro).
         getByName("release") {
             signingConfig = signingConfigs.getByName("librehu")
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
