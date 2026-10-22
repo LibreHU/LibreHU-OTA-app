@@ -105,7 +105,7 @@
     <string name="set_cache_clear">Delete</string>
     <string name="set_checks">Checks</string>
     <string name="set_compile">Compile after install</string>
-    <string name="set_compile_hint">speed-profile, one app at a time: smooth from the first start (root).</string>
+    <string name="set_compile_hint">Full native code (speed), one app at a time, after each install or update (root): smooth from the first start. Without it, Android 9 leaves an app installed outside the Play Store without native code.</string>
     <string name="set_days">%1$d d</string>
     <string name="set_github">GitHub</string>
     <string name="set_history">History</string>

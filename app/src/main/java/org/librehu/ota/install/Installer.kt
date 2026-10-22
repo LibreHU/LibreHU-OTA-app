@@ -186,6 +186,20 @@ object Installer {
 
     fun isSystemApp(info: PackageInfo?): Boolean = info?.applicationInfo?.let { it.flags and ApplicationInfo.FLAG_SYSTEM != 0 } == true
 
+    /**
+     * Native code for [pkg] now (root, in the background, one at a time): `speed`, the whole app. Android 9 installs an
+     * app from outside a store as `speed-profile`, which is `verify` without a profile (no native code at all), and
+     * compiles it only when the head unit is idle and charging, which almost never happens: the app stayed slow.
+     * (`speed-profile` here did nothing either: the profile inside an APK is not read by `cmd package compile`.)
+     */
+    fun compileNow(pkg: String) {
+        if (!Regex("[A-Za-z0-9_.]+").matches(pkg)) return
+        compiler.execute {
+            val out = Root.run("cmd package compile -m speed -f $pkg", timeoutS = 600)
+            android.util.Log.i("LibreHU-OTA", "compile $pkg: ${out?.output?.trim()?.lines()?.lastOrNull()}")
+        }
+    }
+
     /** Installs [apk]: silently as root when possible, otherwise through Android's installer. */
     fun install(
         context: Context,
@@ -202,11 +216,7 @@ object Installer {
             }
         if (useRoot) {
             val out = Root.pmInstall(apk) ?: return InstallResult.Failed("su")
-            if (out.output.contains("Success") && compile) {
-                // Compile now with the profile shipped in the APK (Compose's): smooth from the first start instead of
-                // after Android's overnight optimisation.
-                compiler.execute { Root.run("cmd package compile -m speed-profile -f $pkg", timeoutS = 300) }
-            }
+            if (out.output.contains("Success") && compile) compileNow(pkg)
             return when {
                 out.output.contains("Success") -> InstallResult.Done
                 out.output.contains("INSTALL_FAILED_UPDATE_INCOMPATIBLE") ||

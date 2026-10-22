@@ -278,7 +278,12 @@ class AppRepository private constructor(
                     setTask(pkg, Task.Installing)
                     targets[pkg] = release.versionName
                     val s = OtaSettingsStore.value(context)
-                    if (s.systemAuto && withContext(Dispatchers.IO) { toSystem(pkg, apk, s) }) return@withLock
+                    if (s.systemAuto && withContext(Dispatchers.IO) { toSystem(pkg, apk, s) }) {
+                        // Running from /system or /data already (module / TWRP ones are compiled by LibreHU-service
+                        // at the next start): its native code now
+                        if (s.compile) Installer.compileNow(pkg)
+                        return@withLock
+                    }
                     val result = withContext(Dispatchers.IO) { Installer.install(context, apk, pkg, s.method, s.compile) }
                     if (result == InstallResult.Incompatible) {
                         setTask(pkg, Task.Incompatible(apk))

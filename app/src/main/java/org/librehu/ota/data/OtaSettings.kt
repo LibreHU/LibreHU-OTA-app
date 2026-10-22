@@ -50,7 +50,7 @@ data class OtaSettings(
     /** Updates installed by the background check (root only; LibreHU Apps itself last). */
     val autoInstall: Boolean = false,
     val method: InstallMethod = InstallMethod.AUTO,
-    /** Compiles the app after a root install (speed-profile): smooth from its first start. */
+    /** Compiles the app after a root install (native code, `speed`): smooth from its first start. */
     val compile: Boolean = true,
     /** Keeps the downloaded APKs (else deleted once installed). */
     val keepApks: Boolean = false,

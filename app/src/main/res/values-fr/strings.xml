@@ -105,7 +105,7 @@
     <string name="set_cache_clear">Supprimer</string>
     <string name="set_checks">Vérifications</string>
     <string name="set_compile">Compiler après installation</string>
-    <string name="set_compile_hint">speed-profile, une appli à la fois : fluide dès le premier lancement (root).</string>
+    <string name="set_compile_hint">Code natif complet (speed), une appli à la fois, après chaque installation ou mise à jour (root) : fluide dès le premier lancement. Sans ça, Android 9 laisse une appli installée hors Play Store sans code natif.</string>
     <string name="set_days">%1$d j</string>
     <string name="set_github">GitHub</string>
     <string name="set_history">Historique</string>
