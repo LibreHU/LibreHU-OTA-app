@@ -41,6 +41,8 @@ data class ConfigItem(
             return (0 until a.length()).mapNotNull { i ->
                 runCatching {
                     val o = a.getJSONObject(i)
+                    // The id names files and goes into root commands.
+                    require(Regex("[A-Za-z0-9][A-Za-z0-9._-]{0,63}").matches(o.getString("id")))
                     ConfigItem(
                         id = o.getString("id"),
                         name = o.getString("name"),

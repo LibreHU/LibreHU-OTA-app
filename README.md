@@ -178,7 +178,9 @@ installation (`install/`) n'ont pas changé.
   - **Annuler** : flashe le zip de restauration associé (caché de la liste).
   - URL de l'index modifiable dans Réglages › Sources (dépôt de test ou fork).
 - **Limite de l'API GitHub** (sans compte : 60 requêtes par heure et par adresse IP) : une vérification n'utilise
-  plus l'API. Chaque appli publie à côté de son APK un `release.txt` (version, commit, nom et taille de l'APK), lu
+  plus l'API. Chaque appli publie à côté de son APK un `release.txt` (version, commit, nom, taille et SHA-256 de
+  l'APK, vérifié après le téléchargement ; pour la liste des **Versions**, le condensé `sha256` que GitHub donne pour
+  chaque fichier de release), lu
   comme un simple téléchargement de release, qui ne compte pas dans ces 60 requêtes ; l'API ne sert plus qu'aux
   compilations publiées avant ce fichier, à la liste des **Versions** et aux **changements** d'une version. Ses
   réponses sont gardées avec leur ETag (une réponse inchangée revient en 304, non décomptée avec un jeton), les
@@ -234,3 +236,9 @@ rend Jetpack Compose nettement plus fluide ([Compose performance](https://develo
 règles gardent aussi ce qui n'est appelé que par son nom (méthodes natives, helpers root lancés par `app_process`). Si
 une fonction plante avec « class / method not found », regarder `usage.txt` dans l'artefact *R8 reports* de la CI (ce
 que R8 a retiré) et ajouter une règle `-keep`.
+
+**Contrôles des sources distantes** : les noms de paquets et de dépôts du catalogue, ainsi que les identifiants des
+zips et des configs, servent à nommer des fichiers et entrent dans des commandes root. Une entrée hors format
+(paquet `a.b.c`, dépôt `propriétaire/nom`, identifiant en lettres, chiffres, `.`, `_` ou `-`) est ignorée. Sur
+Android 11 et plus, `QUERY_ALL_PACKAGES` sert à voir toutes les applis du catalogue, même celles qu'il ajoute plus
+tard.

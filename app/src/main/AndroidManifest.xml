@@ -26,6 +26,12 @@
         android:name="android.permission.READ_LOGS"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- Android 11+: the catalogue (catalog.json) can name any app; without this, those missing from <queries> below
+         would look not installed. Not sold in a store: no store policy applies. -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <queries>
         <package android:name="org.librehu.service" />
         <package android:name="org.librehu.launcher" />
@@ -36,6 +42,10 @@
         <package android:name="org.librehu.easysource" />
         <package android:name="com.llsl.viper4android" />
         <package android:name="com.dokt.jacmcu" />
+        <package android:name="org.librehu.disc" />
+        <package android:name="org.librehu.helper" />
+        <package android:name="org.librehu.headunit" />
+        <package android:name="org.librehu.carplay" />
         <!-- Root managers: official KernelSU 3+ needs a metamodule to change /system, KernelSU Next does not. -->
         <package android:name="me.weishu.kernelsu" />
         <package android:name="com.rifsxd.ksunext" />

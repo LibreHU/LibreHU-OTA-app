@@ -52,9 +52,13 @@ data class CatalogApp(
             )
         }
 
+        /** Package names and repositories go into URLs and root commands (`pm`, modules): checked, others dropped. */
+        private val PACKAGE = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
+        private val REPO = Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+
         fun parse(json: String): List<CatalogApp> {
             val apps = JSONObject(json).getJSONArray("apps")
-            return List(apps.length()) { fromJson(apps.getJSONObject(it)) }
+            return List(apps.length()) { fromJson(apps.getJSONObject(it)) }.filter { PACKAGE.matches(it.packageName) && REPO.matches(it.repo) }
         }
     }
 }

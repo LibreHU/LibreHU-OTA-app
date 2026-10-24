@@ -135,7 +135,7 @@ object GitHub {
             publishedAt = notes["date"] ?: "",
             summary = notes[""] ?: "",
             commit = notes["commit"] ?: "",
-            sha256 = notes["sha256"]?.takeIf { Regex("[0-9a-fA-F]{64}").matches(it) } ?: "",
+            sha256 = notes["sha256"]?.takeIf { SHA256.matches(it) } ?: "",
         )
     }
 
@@ -204,10 +204,17 @@ object GitHub {
                 publishedAt = a.optString("updated_at", r.optString("published_at")),
                 summary = notes[""] ?: "",
                 commit = notes["commit"] ?: "",
+                // GitHub's own digest of the asset ("sha256:<hex>"), else the notes'.
+                sha256 =
+                    (a.optString("digest").removePrefix("sha256:").takeIf { a.optString("digest").startsWith("sha256:") } ?: notes["sha256"].orEmpty())
+                        .takeIf { SHA256.matches(it) }
+                        .orEmpty(),
             )
         }
         return null
     }
+
+    private val SHA256 = Regex("[0-9a-fA-F]{64}")
 
     private fun slug(branch: String) = branch.replace('/', '-')
 

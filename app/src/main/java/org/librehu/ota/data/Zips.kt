@@ -59,6 +59,7 @@ object Zips {
     const val INDEX_URL = "https://github.com/LibreHU/LibreHU-flashablesZips/releases/download/zips/index.json"
     private const val PREF_INDEX = "zips_index_cache"
     private const val BACKUP_DIR = "/sdcard/LibreHU/backup"
+    private val SAFE_ID = Regex("[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 
     fun indexUrl(context: Context) = OtaSettingsStore.value(context).zipsIndexUrl.ifBlank { INDEX_URL }
 
@@ -84,7 +85,8 @@ object Zips {
                 )
             }
         val zips =
-            o.optJSONArray("zips").objects().map { z ->
+            // The id names files and goes into root commands: letters, digits, '.', '_' and '-' only.
+            o.optJSONArray("zips").objects().filter { SAFE_ID.matches(it.optString("id")) }.map { z ->
                 FlashZip(
                     id = z.getString("id"),
                     name = z.optString("name", z.getString("id")),

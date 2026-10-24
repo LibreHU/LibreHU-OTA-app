@@ -26,20 +26,26 @@ class CheckJob : JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
         val repo = AppRepository.get(this)
         CoroutineScope(Dispatchers.IO).launch {
-            repo.check()
-            delay(500)
-            repo.busy.first { !it }
-            val s = OtaSettingsStore.value(this@CheckJob)
-            val updates = repo.updates().filter { it.app.packageName !in s.ignored }
-            if (s.notify) notifyUpdates(this@CheckJob, updates.map { it.app.name })
-            // Background install (root only, so that nothing asks): LibreHU Apps itself last.
-            if (s.autoInstall && updates.isNotEmpty() &&
-                org.librehu.ota.install.Root
-                    .isAvailable()
-            ) {
-                repo.updateAll()
+            // Finished whatever happens: a job never finished holds its wakelock until Android stops it.
+            try {
+                repo.check()
+                delay(500)
+                repo.busy.first { !it }
+                val s = OtaSettingsStore.value(this@CheckJob)
+                val updates = repo.updates().filter { it.app.packageName !in s.ignored }
+                if (s.notify) notifyUpdates(this@CheckJob, updates.map { it.app.name })
+                // Background install (root only, so that nothing asks): LibreHU Apps itself last.
+                if (s.autoInstall && updates.isNotEmpty() &&
+                    org.librehu.ota.install.Root
+                        .isAvailable()
+                ) {
+                    repo.updateAll()
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("LibreHU-OTA", "check: ${e.message}")
+            } finally {
+                jobFinished(params, false)
             }
-            jobFinished(params, false)
         }
         return true
     }

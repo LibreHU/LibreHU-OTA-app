@@ -74,7 +74,7 @@ jobs:
           OUT="$APP-$SLUG.apk"
           cp "$(ls app/build/outputs/apk/release/*.apk | head -n1)" "$OUT"
           CODE=$(git rev-list --count HEAD)
-          NAME="$(git describe --tags --always --exclude 'latest-*' --exclude 'build-*')-$BRANCH"
+          NAME="$(git describe --tags --always --exclude 'latest-*' --exclude 'build-*' --exclude screenshots)-$BRANCH"
           # SHA-256 of the APK: LibreHU Apps checks the download against it.
           SHA=$(sha256sum "$OUT" | cut -d' ' -f1)
           printf 'versionCode=%s\nversionName=%s\nbranch=%s\ncommit=%s\nsha256=%s\n\n%s\n' \

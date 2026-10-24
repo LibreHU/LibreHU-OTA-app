@@ -1028,7 +1028,11 @@ class AppRepository private constructor(
         private const val LOG_LINES = 2000
 
         /** Commit at the end of a `git describe` version name: `v1.2-3-gabc1234`, `abc1234`, `abc1234-dirty`. */
-        private val COMMIT = Regex("""(?:-g|^)([0-9a-f]{7,40})(?:-dirty)?$""")
+        /**
+         * Commit in an installed versionName: `git describe` (`…-g<sha>`, or the bare `<sha>`), a fork's `….<sha>`,
+         * maybe `-dirty`, then the `-<branch>` it was built from (`9d014f8-main`, `2.1.1-librehu.5116361-librehu-service`).
+         */
+        private val COMMIT = Regex("""(?:-g|^|\.)([0-9a-f]{7,40})(?:-dirty)?(?:-[A-Za-z][A-Za-z0-9._-]*)?$""")
 
         @Volatile
         private var instance: AppRepository? = null
