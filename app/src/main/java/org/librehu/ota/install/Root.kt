@@ -10,16 +10,28 @@ object Root {
     private const val TAG = "LibreHU-OTA"
     private const val RETRY_MS = 30_000L
 
+    /** Time given to `su` to answer (its manager may show a prompt), then once more after [PAUSE_MS]. */
+    private const val CHECK_TIMEOUT_S = 15L
+    private const val PAUSE_MS = 2_000L
+
     @Volatile
     private var available: Boolean? = null
 
     @Volatile
     private var checkedAt = 0L
 
-    /** True when `su` grants root; a refusal is asked again after 30 s (KernelSU grants from its manager). */
+    /**
+     * True when `su` grants root; a refusal is asked again after 30 s (KernelSU grants from its manager). A `su` that
+     * does not answer no longer blocks: 15 s, then one retry (one check at a time, the others wait for its answer).
+     */
+    @Synchronized
     fun isAvailable(): Boolean {
         available?.let { if (it || System.currentTimeMillis() - checkedAt < RETRY_MS) return it }
-        val ok = run("id")?.output?.contains("uid=0") == true
+        var ok = run("id", timeoutS = CHECK_TIMEOUT_S)?.output?.contains("uid=0") == true
+        if (!ok) {
+            Thread.sleep(PAUSE_MS)
+            ok = run("id", timeoutS = CHECK_TIMEOUT_S)?.output?.contains("uid=0") == true
+        }
         available = ok
         checkedAt = System.currentTimeMillis()
         return ok

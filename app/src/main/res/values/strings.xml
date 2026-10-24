@@ -283,4 +283,23 @@
     <string name="setup_next">Next</string>
     <string name="setup_install_n">Install %1$d app(s)</string>
     <string name="setup_done">Finish</string>
+    <string name="no_space">Not enough room: %1$d MB more needed (clear the cache in Settings → Storage)</string>
+    <string name="bad_signature">Unexpected signing key (%1$s): not installed</string>
+    <string name="channel_install_confirm">Install confirmations</string>
+    <string name="install_confirm_title">Install %1$s?</string>
+    <string name="install_confirm_text">Touch to confirm the install</string>
+    <string name="offline_title">USB key (offline)</string>
+    <string name="offline_hint">Without internet: copy APKs, zips or images onto a USB key (at its root or in a folder), pick the folder, then check each file. An APK must carry the LibreHU key (or the key of the app already installed); a zip or an image must match the zips list received the last time the head unit was online (SHA-256).</string>
+    <string name="offline_pick">Pick the USB key\'s folder</string>
+    <string name="offline_empty">No APK, zip or image in this folder</string>
+    <string name="offline_check">Check</string>
+    <string name="offline_install">Install</string>
+    <string name="offline_not_apk">Not an APK Android can read</string>
+    <string name="offline_key_librehu">LibreHU key</string>
+    <string name="offline_key_installed">key of the installed app</string>
+    <string name="offline_no_index">No zips list yet: connect once to the internet to receive it</string>
+    <string name="offline_unknown_zip">Not in the zips list (SHA-256): not installed</string>
+    <string name="offline_installed">Installed</string>
+    <string name="offline_confirm">Android asks for a confirmation</string>
+    <string name="offline_reboot_recovery">Restart into TWRP now</string>
 </resources>

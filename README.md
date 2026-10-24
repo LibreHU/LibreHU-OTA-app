@@ -17,7 +17,7 @@ vérification, bouton Vérifier).
 | **Fiche d'une appli** | en-tête (icône, paquet, dépôt, état), actions (Ouvrir, Réinstaller, Journal, Installer dans /system, Ne pas mettre à jour, **Désinstaller** : /data, /system ou les deux), avancement, versions dans /data et /system, version GitHub, branche, date, taille, nouveautés et commits, **toutes les versions** (chargées à la demande : une requête GitHub) à installer, revenir à une plus ancienne ou mettre dans /system |
 | **Zips** | deux onglets : *Zips flashables* et *Fichiers de configuration* |
 | **Téléchargements** (badge : ceux en cours) | en cours ou en pause (avancement, débit, temps restant, pause / reprise / annulation), terminés ou en échec, puis l'**historique** |
-| **Réglages** | sections Général (édition, root), Vérifications, Installation, /system, Sources (jeton GitHub, index des zips), Stockage, À propos |
+| **Réglages** | sections Général (édition, root), Vérifications, Installation, /system, **Clé USB (hors ligne)**, Sources (jeton GitHub, index des zips), Stockage, À propos |
 
 Les choix qu'une installation attend (autre signature, version plus ancienne, emplacement dans /system) s'ouvrent
 quelle que soit la page affichée. Le code de l'interface est rangé par page (`ui/apps`, `ui/updates`, `ui/details`,
@@ -50,7 +50,9 @@ installation (`install/`) n'ont pas changé.
   sur son dépôt officiel `KernelSU-Next/KernelSU-Next` : `"tagged": true` (releases classiques, la plus récente
   hors pré-releases) et `"asset"`, expression régulière de l'APK à prendre (l'APK normal, pas le `-spoofed`), dont le
   premier groupe donne le `versionCode` (`KernelSU_Next_v3.4.2_33355-release.apk` → 33355) quand les notes de la
-  release n'en donnent pas. Signé par ses auteurs, pas avec la clé LibreHU.
+  release n'en donnent pas. Signé par ses auteurs, pas avec la clé LibreHU. Champ facultatif `"cert"` : SHA-256 du
+  certificat de signature attendu (plusieurs séparés par des virgules) pour une appli hors LibreHU ; vérifié avant
+  l'installation (voir *Clé de signature vérifiée* plus bas).
 - **Releases** : chaque dépôt publie, à chaque push, une pré-release continue par branche (`latest-<branche>`) avec
   l'APK et sa version dans les notes (`versionCode=…`, `versionName=…`), par l'étape « Rolling release » de son
   workflow `build.yml`. Il garde aussi les **15 dernières compilations** de chaque branche, en releases numérotées
@@ -58,7 +60,27 @@ installation (`install/`) n'ont pas changé.
 - **Édition** : `LibreHU service` (branches `librehu-service`), `Jancar ivi-services` (branches `ivi`) ou `Android
   générique` (`main`) ; une appli publiée sur une seule branche ignore ce choix.
 - **Installation** : en root (Magisk, KernelSU, KernelSU Next, APatch…) `pm install` silencieux ; sans root,
-  l'installeur d'Android (autoriser « installer des applis inconnues » pour LibreHU Apps).
+  l'installeur d'Android (autoriser « installer des applis inconnues » pour LibreHU Apps). Sur Android 10 et plus,
+  une appli en arrière-plan ne peut plus ouvrir d'écran
+  ([doc Android](https://developer.android.com/guide/components/activities/background-starts)) : la confirmation
+  d'Android arrive aussi en **notification** (« Installer … ? », un toucher l'ouvre).
+- **Détection du root** : `su -c id` a 15 s pour répondre (le gestionnaire peut afficher sa demande), puis **un nouvel
+  essai** 2 s plus tard ; un refus est redemandé après 30 s. Un `su` qui ne rend pas la main ne bloque plus l'appli.
+- **Clé de signature vérifiée avant d'installer** : Android refuse une *mise à jour* signée avec une autre clé, pas
+  une *première* installation. L'APK d'un dépôt `LibreHU/…` doit porter la clé LibreHU (certificat SHA-256
+  `91a1e7a1…d3fc00dc`), celui d'une autre appli la clé que donne le champ `cert` du catalogue (sans ce champ, comme
+  pour KernelSU Next aujourd'hui, seule la vérification d'Android s'applique). Une autre clé : APK supprimé, pas
+  installé.
+- **Place libre vérifiée avant un téléchargement** (APK : ce qui reste à recevoir + la copie installée ; zip ou
+  image : le fichier + sa copie pour TWRP ou la sauvegarde de la partition ; plus 64 Mo de marge) : sinon « Pas assez
+  de place : encore N Mo nécessaires ».
+- **Clé USB (hors ligne)** (Réglages) : sans internet, copier des APK, zips ou images sur une clé (à la racine ou
+  dans un dossier), choisir le dossier avec le sélecteur d'Android, puis **Vérifier** chaque fichier (copié dans
+  l'appli d'abord) et **Installer**. Un APK doit porter la clé LibreHU ou celle de l'appli déjà installée ; un zip ou
+  une image doit avoir le SHA-256 d'une entrée de la liste des zips reçue la dernière fois que l'autoradio était en
+  ligne (gardée hors ligne), et suit alors le même chemin que depuis la liste (TWRP, ou écrit sur sa partition avec
+  sauvegarde). Un fichier inconnu est refusé (le flash d'un zip choisi à la main reste dans Zips › Fichiers de
+  configuration).
 - **Signature** : toutes les applis LibreHU sont signées avec la même clé (`keystore/librehu.jks`), une mise à jour
   s'installe donc par-dessus la précédente en gardant ses données. Les APK des anciens builds avaient chacun une clé
   aléatoire : la première installation par LibreHU Apps propose de **désinstaller puis installer** (réglages perdus),

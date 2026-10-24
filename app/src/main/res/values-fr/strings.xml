@@ -283,4 +283,23 @@
     <string name="setup_next">Suivant</string>
     <string name="setup_install_n">Installer %1$d appli(s)</string>
     <string name="setup_done">Terminer</string>
+    <string name="no_space">Pas assez de place : encore %1$d Mo nécessaires (vider le cache dans Paramètres → Stockage)</string>
+    <string name="bad_signature">Clé de signature inattendue (%1$s) : pas installé</string>
+    <string name="channel_install_confirm">Confirmations d\'installation</string>
+    <string name="install_confirm_title">Installer %1$s ?</string>
+    <string name="install_confirm_text">Toucher pour confirmer l\'installation</string>
+    <string name="offline_title">Clé USB (hors ligne)</string>
+    <string name="offline_hint">Sans internet : copier des APK, zips ou images sur une clé USB (à la racine ou dans un dossier), choisir le dossier, puis vérifier chaque fichier. Un APK doit porter la clé LibreHU (ou celle de l\'appli déjà installée) ; un zip ou une image doit correspondre à la liste des zips reçue la dernière fois que l\'autoradio était en ligne (SHA-256).</string>
+    <string name="offline_pick">Choisir le dossier de la clé USB</string>
+    <string name="offline_empty">Aucun APK, zip ou image dans ce dossier</string>
+    <string name="offline_check">Vérifier</string>
+    <string name="offline_install">Installer</string>
+    <string name="offline_not_apk">Pas un APK lisible par Android</string>
+    <string name="offline_key_librehu">clé LibreHU</string>
+    <string name="offline_key_installed">clé de l\'appli installée</string>
+    <string name="offline_no_index">Pas encore de liste des zips : se connecter une fois à internet pour la recevoir</string>
+    <string name="offline_unknown_zip">Absent de la liste des zips (SHA-256) : pas installé</string>
+    <string name="offline_installed">Installé</string>
+    <string name="offline_confirm">Android demande une confirmation</string>
+    <string name="offline_reboot_recovery">Redémarrer dans TWRP maintenant</string>
 </resources>

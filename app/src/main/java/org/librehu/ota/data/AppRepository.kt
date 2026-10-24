@@ -23,6 +23,8 @@ import kotlinx.coroutines.withContext
 import org.librehu.ota.install.InstallResult
 import org.librehu.ota.install.Installer
 import org.librehu.ota.install.Root
+import org.librehu.ota.install.Signatures
+import org.librehu.ota.install.Space
 import org.librehu.ota.install.SystemInstall
 import java.io.File
 
@@ -689,6 +691,12 @@ class AppRepository private constructor(
     ): File? =
         try {
             pauses.remove(pkg)
+            // Room for what is still to come and for the installed copy.
+            val part = File(File(context.cacheDir, "apk"), "$pkg.apk.part").length()
+            Space.missingMb(context, release.size - part, release.size)?.let { mb ->
+                setTask(pkg, Task.Failed(context.getString(org.librehu.ota.R.string.no_space, mb)))
+                return null
+            }
             setTask(pkg, Task.Downloading(0f, total = release.size.takeIf { it > 0 } ?: -1))
             var speed = 0.0
             var lastDone = -1L
@@ -707,8 +715,15 @@ class AppRepository private constructor(
                     setTask(pkg, Task.Downloading(if (total > 0) done.toFloat() / total else -1f, done, total, speed.toLong(), eta))
                 }
             val info = Installer.archiveInfo(context, apk)
+            val app = _apps.value.firstOrNull { it.app.packageName == pkg }?.app
+            val signature = if (info == null) null else Signatures.check(context, apk, app)
             if (info == null || info.packageName != pkg) {
                 setTask(pkg, Task.Failed("APK: ${info?.packageName ?: "?"}"))
+                null
+            } else if (signature is Signatures.Check.Refused) {
+                // Not the expected key: never installed (a first install would not be stopped by Android).
+                apk.delete()
+                setTask(pkg, Task.Failed(context.getString(org.librehu.ota.R.string.bad_signature, signature.found)))
                 null
             } else {
                 apk

@@ -178,6 +178,7 @@ fun SettingsScreen(repo: AppRepository) {
                 }
             }
         }
+        item { OfflinePanel() }
         item {
             Card {
                 SectionTitle(stringResource(R.string.set_github))

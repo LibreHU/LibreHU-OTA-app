@@ -5,7 +5,9 @@ import android.os.Build
 import org.json.JSONArray
 import org.json.JSONObject
 import org.librehu.ota.install.Installer
+import org.librehu.ota.R
 import org.librehu.ota.install.Root
+import org.librehu.ota.install.Space
 import java.io.File
 import java.security.MessageDigest
 import java.util.Locale
@@ -118,6 +120,8 @@ object Zips {
     ): Configs.Outcome {
         if (!Root.isAvailable()) return Configs.Outcome.Failed("root")
         if (!z.compatible) return Configs.Outcome.Failed("device ${Build.DEVICE}")
+        // The zip, then its copy for TWRP.
+        Space.missingMb(context, z.size, z.size)?.let { return Configs.Outcome.Failed(context.getString(R.string.no_space, it)) }
         val file =
             try {
                 Installer.download(context, z.url, "zip-${z.id}.zip") {}
@@ -125,20 +129,31 @@ object Zips {
                 return Configs.Outcome.Failed(e.message ?: e.javaClass.simpleName)
             }
         try {
-            // Nothing from the network is flashed unchecked: an index entry without its SHA-256 is refused.
-            if (z.sha256.isBlank() || !sha256(file).equals(z.sha256, ignoreCase = true)) return Configs.Outcome.Failed("SHA-256")
-            val r = file.inputStream().use { Configs.flash(it, "${z.id}.zip") }
-            History.add(
-                context,
-                z.name,
-                "${z.version} · TWRP",
-                r is Configs.Outcome.Done,
-                if (r is Configs.Outcome.Failed) r.reason else "OK",
-            )
-            return r
+            return flashFile(context, z, file)
         } finally {
             file.delete()
         }
+    }
+
+    /** [file] (downloaded, or from a USB key) checked against [z]'s SHA-256, then handed to TWRP. */
+    fun flashFile(
+        context: Context,
+        z: FlashZip,
+        file: File,
+    ): Configs.Outcome {
+        if (!Root.isAvailable()) return Configs.Outcome.Failed("root")
+        if (!z.compatible) return Configs.Outcome.Failed("device ${Build.DEVICE}")
+        // Nothing is flashed unchecked: an index entry without its SHA-256 is refused.
+        if (z.sha256.isBlank() || !sha256(file).equals(z.sha256, ignoreCase = true)) return Configs.Outcome.Failed("SHA-256")
+        val r = file.inputStream().use { Configs.flash(it, "${z.id}.zip") }
+        History.add(
+            context,
+            z.name,
+            "${z.version} · TWRP",
+            r is Configs.Outcome.Done,
+            if (r is Configs.Outcome.Failed) r.reason else "OK",
+        )
+        return r
     }
 
     /**
@@ -152,6 +167,8 @@ object Zips {
         if (!Root.isAvailable()) return Configs.Outcome.Failed("root")
         if (!z.compatible) return Configs.Outcome.Failed("device ${Build.DEVICE}")
         if (z.imageUrl.isBlank() || !Regex("[a-z0-9_]+").matches(z.partition)) return Configs.Outcome.Failed("image")
+        // The image, then the copy of the partition it replaces.
+        Space.missingMb(context, z.imageSize, z.imageSize)?.let { return Configs.Outcome.Failed(context.getString(R.string.no_space, it)) }
         val file =
             try {
                 Installer.download(context, z.imageUrl, "img-${z.id}.img") {}
@@ -159,50 +176,62 @@ object Zips {
                 return Configs.Outcome.Failed(e.message ?: e.javaClass.simpleName)
             }
         try {
-            val sum = sha256(file)
-            if (z.imageSha256.isBlank() || !sum.equals(z.imageSha256, ignoreCase = true)) return Configs.Outcome.Failed("SHA-256")
-            val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(java.util.Date())
-            val size = file.length()
-            val script =
-                """
-                part=""
-                for p in /dev/block/by-name/${z.partition} /dev/block/platform/*/by-name/${z.partition} /dev/block/platform/*/*/by-name/${z.partition}; do
-                  [ -e "${'$'}p" ] && { part=${'$'}p; break; }
-                done
-                [ -n "${'$'}part" ] || { echo "NOPART"; exit 3; }
-                psize=${'$'}(blockdev --getsize64 "${'$'}part")
-                [ $size -le "${'$'}psize" ] || { echo "TOOBIG ${'$'}psize"; exit 4; }
-                blockdev --setrw "${'$'}part" 2>/dev/null
-                mkdir -p $BACKUP_DIR && dd if="${'$'}part" of=$BACKUP_DIR/${z.partition}-$stamp.img bs=1048576 2>/dev/null || { echo "BACKUP"; exit 5; }
-                cat > "${'$'}part" && sync
-                w=${'$'}(head -c $size "${'$'}part" | sha256sum | cut -d' ' -f1)
-                [ "${'$'}w" = "$sum" ] || { echo "VERIFY"; exit 6; }
-                echo "OK ${'$'}part"
-                """.trimIndent()
-            val out = Root.run(script, file.inputStream(), timeoutS = 300) ?: return Configs.Outcome.Failed("su")
-            val r =
-                when (out.exit) {
-                    0 -> Configs.Outcome.Done("/dev/block/by-name/${z.partition} ($BACKUP_DIR/${z.partition}-$stamp.img)")
-                    3 -> Configs.Outcome.Failed("partition ${z.partition}?")
-                    4 -> Configs.Outcome.Failed("size")
-                    5 -> Configs.Outcome.Failed("backup")
-                    6 -> Configs.Outcome.Failed("verify: reflash $BACKUP_DIR/${z.partition}-$stamp.img")
-                    else -> Configs.Outcome.Failed(out.output.ifEmpty { "exit ${out.exit}" })
-                }
-            History.add(
-                context,
-                z.name,
-                "${z.version} → ${z.partition}",
-                r is Configs.Outcome.Done,
-                if (r is Configs.Outcome.Failed) r.reason else "OK",
-            )
-            return r
+            return writeImageFile(context, z, file)
         } finally {
             file.delete()
         }
     }
 
-    private fun sha256(f: File): String {
+    /** [file] (downloaded, or from a USB key) checked against [z]'s image SHA-256, then written to its partition. */
+    fun writeImageFile(
+        context: Context,
+        z: FlashZip,
+        file: File,
+    ): Configs.Outcome {
+        if (!Root.isAvailable()) return Configs.Outcome.Failed("root")
+        if (!z.compatible) return Configs.Outcome.Failed("device ${Build.DEVICE}")
+        if (!Regex("[a-z0-9_]+").matches(z.partition)) return Configs.Outcome.Failed("image")
+        val sum = sha256(file)
+        if (z.imageSha256.isBlank() || !sum.equals(z.imageSha256, ignoreCase = true)) return Configs.Outcome.Failed("SHA-256")
+        val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(java.util.Date())
+        val size = file.length()
+        val script =
+            """
+            part=""
+            for p in /dev/block/by-name/${z.partition} /dev/block/platform/*/by-name/${z.partition} /dev/block/platform/*/*/by-name/${z.partition}; do
+              [ -e "${'$'}p" ] && { part=${'$'}p; break; }
+            done
+            [ -n "${'$'}part" ] || { echo "NOPART"; exit 3; }
+            psize=${'$'}(blockdev --getsize64 "${'$'}part")
+            [ $size -le "${'$'}psize" ] || { echo "TOOBIG ${'$'}psize"; exit 4; }
+            blockdev --setrw "${'$'}part" 2>/dev/null
+            mkdir -p $BACKUP_DIR && dd if="${'$'}part" of=$BACKUP_DIR/${z.partition}-$stamp.img bs=1048576 2>/dev/null || { echo "BACKUP"; exit 5; }
+            cat > "${'$'}part" && sync
+            w=${'$'}(head -c $size "${'$'}part" | sha256sum | cut -d' ' -f1)
+            [ "${'$'}w" = "$sum" ] || { echo "VERIFY"; exit 6; }
+            echo "OK ${'$'}part"
+            """.trimIndent()
+        val out = Root.run(script, file.inputStream(), timeoutS = 300) ?: return Configs.Outcome.Failed("su")
+        val r =
+            when (out.exit) {
+                0 -> Configs.Outcome.Done("/dev/block/by-name/${z.partition} ($BACKUP_DIR/${z.partition}-$stamp.img)")
+                3 -> Configs.Outcome.Failed("partition ${z.partition}?")
+                4 -> Configs.Outcome.Failed("size")
+                5 -> Configs.Outcome.Failed("backup")
+                6 -> Configs.Outcome.Failed("verify: reflash $BACKUP_DIR/${z.partition}-$stamp.img")
+                else -> Configs.Outcome.Failed(out.output.ifEmpty { "exit ${out.exit}" })
+            }
+        History.add(
+            context,
+            z.name,
+            "${z.version} → ${z.partition}",
+            r is Configs.Outcome.Done,
+            if (r is Configs.Outcome.Failed) r.reason else "OK",
+        )
+        return r
+    }
+
+    fun sha256(f: File): String {
         val md = MessageDigest.getInstance("SHA-256")
         f.inputStream().use { input ->
             val buf = ByteArray(1 shl 16)

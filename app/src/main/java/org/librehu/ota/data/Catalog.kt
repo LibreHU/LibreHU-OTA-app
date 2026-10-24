@@ -34,6 +34,11 @@ data class CatalogApp(
      * its first group, if any, is the versionCode when the release notes do not give one. Empty: the first APK.
      */
     val asset: String = "",
+    /**
+     * SHA-256 of the signing certificate(s) the APK must carry (comma separated), for an app outside LibreHU; a
+     * LibreHU repository needs the LibreHU key without it ([org.librehu.ota.install.Signatures]).
+     */
+    val cert: String = "",
 ) {
     fun branchFor(edition: Edition): String = if (edition.branch in branches) edition.branch else branches.first()
 
@@ -49,6 +54,7 @@ data class CatalogApp(
                 branches = if (b == null) listOf("main") else List(b.length()) { b.getString(it) },
                 tagged = o.optBoolean("tagged", false),
                 asset = o.optString("asset"),
+                cert = o.optString("cert"),
             )
         }
 
@@ -131,7 +137,8 @@ object Catalog {
                                 .put("description", a.description)
                                 .put("branches", JSONArray(a.branches))
                                 .put("tagged", a.tagged)
-                                .put("asset", a.asset),
+                                .put("asset", a.asset)
+                                .put("cert", a.cert),
                         )
                     }
                 },
