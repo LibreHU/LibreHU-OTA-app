@@ -163,7 +163,8 @@
         "main"
       ],
       "tagged": true,
-      "asset": "^KernelSU_Next_v[0-9.]+_([0-9]+)-release\\.apk$"
+      "asset": "^KernelSU_Next_v[0-9.]+_([0-9]+)-release\\.apk$",
+      "cert": "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7"
     },
     {
       "id": "ota",

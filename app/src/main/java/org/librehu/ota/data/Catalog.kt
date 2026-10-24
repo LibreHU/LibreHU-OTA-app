@@ -78,6 +78,12 @@ object Catalog {
     /** KernelSU_Next_<versionName>_<versionCode>-release.apk (manager/app/build.gradle.kts), not the -spoofed one. */
     private const val KSU_NEXT_APK = "^KernelSU_Next_v[0-9.]+_([0-9]+)-release\\.apk$"
 
+    /**
+     * Certificate of KernelSU Next's manager: the one its kernel accepts (KSU_NEXT_MANAGER_HASH, kernel/Kbuild of
+     * KernelSU-Next, SHA-256 of the signing certificate).
+     */
+    private const val KSU_NEXT_CERT = "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7"
+
     val BUILT_IN =
         listOf(
             CatalogApp("service", "LibreHU service", "LibreHU/LibreHU-service", "org.librehu.service", "MCU, audio, Bluetooth, OBD"),
@@ -118,6 +124,7 @@ object Catalog {
                 "Root du noyau LibreHU",
                 tagged = true,
                 asset = KSU_NEXT_APK,
+                cert = KSU_NEXT_CERT,
             ),
             CatalogApp("ota", "LibreHU Apps (OTA)", "LibreHU/LibreHU-OTA-app", "org.librehu.ota"),
         )

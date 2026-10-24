@@ -68,8 +68,9 @@ installation (`install/`) n'ont pas changé.
   essai** 2 s plus tard ; un refus est redemandé après 30 s. Un `su` qui ne rend pas la main ne bloque plus l'appli.
 - **Clé de signature vérifiée avant d'installer** : Android refuse une *mise à jour* signée avec une autre clé, pas
   une *première* installation. L'APK d'un dépôt `LibreHU/…` doit porter la clé LibreHU (certificat SHA-256
-  `91a1e7a1…d3fc00dc`), celui d'une autre appli la clé que donne le champ `cert` du catalogue (sans ce champ, comme
-  pour KernelSU Next aujourd'hui, seule la vérification d'Android s'applique). Une autre clé : APK supprimé, pas
+  `91a1e7a1…d3fc00dc`), celui d'une autre appli la clé que donne le champ `cert` du catalogue (KernelSU Next : `79e59011…821bf7`, la
+  clé que son noyau accepte pour le gestionnaire, `KSU_NEXT_MANAGER_HASH` dans `kernel/Kbuild` de KernelSU-Next ;
+  sans ce champ, seule la vérification d'Android s'applique). Une autre clé : APK supprimé, pas
   installé.
 - **Place libre vérifiée avant un téléchargement** (APK : ce qui reste à recevoir + la copie installée ; zip ou
   image : le fichier + sa copie pour TWRP ou la sauvegarde de la partition ; plus 64 Mo de marge) : sinon « Pas assez
