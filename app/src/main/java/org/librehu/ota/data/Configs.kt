@@ -30,7 +30,7 @@ data class ConfigItem(
     val dest: String = "",
     val mode: String = "0644",
     val owner: String = "root:root",
-    /** SHA-256 of the download (hex); empty = not checked. */
+    /** SHA-256 of the download (hex); a catalogue item without one is refused. */
     val sha256: String = "",
     /** A reboot is needed for the file to be used. */
     val reboot: Boolean = false,
@@ -98,7 +98,8 @@ object Configs {
                 return Outcome.Failed(e.message ?: e.javaClass.simpleName)
             }
         try {
-            if (item.sha256.isNotBlank() && !sha256(file).equals(item.sha256.trim(), ignoreCase = true)) {
+            // Nothing from the network is written as root unchecked.
+            if (item.sha256.isBlank() || !sha256(file).equals(item.sha256.trim(), ignoreCase = true)) {
                 return Outcome.Failed("SHA-256")
             }
             val r =

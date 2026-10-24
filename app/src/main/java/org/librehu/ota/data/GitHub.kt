@@ -19,6 +19,8 @@ data class Release(
     val summary: String,
     /** Commit the APK was built from (notes `commit=`). */
     val commit: String = "",
+    /** SHA-256 of the APK (notes `sha256=`), checked after the download; empty for builds published before it. */
+    val sha256: String = "",
 ) {
     /** For the list kept between starts (shown without network). */
     fun toJson(): JSONObject =
@@ -32,6 +34,7 @@ data class Release(
             .put("publishedAt", publishedAt)
             .put("summary", summary)
             .put("commit", commit)
+            .put("sha256", sha256)
 
     companion object {
         fun fromJson(o: JSONObject): Release =
@@ -45,6 +48,7 @@ data class Release(
                 publishedAt = o.optString("publishedAt"),
                 summary = o.optString("summary"),
                 commit = o.optString("commit"),
+                sha256 = o.optString("sha256"),
             )
     }
 }
@@ -131,6 +135,7 @@ object GitHub {
             publishedAt = notes["date"] ?: "",
             summary = notes[""] ?: "",
             commit = notes["commit"] ?: "",
+            sha256 = notes["sha256"]?.takeIf { Regex("[0-9a-fA-F]{64}").matches(it) } ?: "",
         )
     }
 

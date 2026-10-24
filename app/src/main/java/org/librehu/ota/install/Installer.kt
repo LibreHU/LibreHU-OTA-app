@@ -66,7 +66,8 @@ object Installer {
      * Downloads [url] into the cache as [name], resuming a `.part` left by a pause (HTTP Range, with `If-Range` on the
      * ETag of the first response, so that a file replaced on the server starts again from zero). [onProgress] gets the
      * bytes done and the total (-1 when unknown), at most every 250 ms; [paused] is asked between two blocks and stops
-     * it with [DownloadPaused], keeping the part. [expectedSize] (when known, > 0) is checked at the end.
+     * it with [DownloadPaused], keeping the part. [expectedSize] (when known, > 0) and [expectedSha256] (when known) are
+     * checked at the end: a file that does not match is deleted.
      */
     fun download(
         context: Context,
@@ -74,6 +75,7 @@ object Installer {
         name: String,
         expectedSize: Long = 0,
         paused: () -> Boolean = { false },
+        expectedSha256: String = "",
         onProgress: (done: Long, total: Long) -> Unit,
     ): File {
         val dir = File(context.cacheDir, "apk").apply { mkdirs() }
@@ -93,7 +95,7 @@ object Installer {
             val code = c.responseCode
             if (code == 416 && expectedSize > 0 && start == expectedSize) {
                 // Everything was already there.
-                return finish(part, dest, meta, expectedSize)
+                return finish(part, dest, meta, expectedSize, expectedSha256)
             }
             if (code == 416) {
                 part.delete()
@@ -137,7 +139,7 @@ object Installer {
         } finally {
             c.disconnect()
         }
-        return finish(part, dest, meta, expectedSize)
+        return finish(part, dest, meta, expectedSize, expectedSha256)
     }
 
     private fun finish(
@@ -145,12 +147,30 @@ object Installer {
         dest: File,
         meta: File,
         expectedSize: Long,
+        expectedSha256: String = "",
     ): File {
         if (expectedSize > 0 && part.length() != expectedSize) {
             val got = part.length()
             part.delete()
             meta.delete()
             throw IOException("size $got / $expectedSize")
+        }
+        if (expectedSha256.isNotEmpty()) {
+            val md = java.security.MessageDigest.getInstance("SHA-256")
+            part.inputStream().use { input ->
+                val buf = ByteArray(1 shl 16)
+                while (true) {
+                    val n = input.read(buf)
+                    if (n < 0) break
+                    md.update(buf, 0, n)
+                }
+            }
+            val got = md.digest().joinToString("") { "%02x".format(it) }
+            if (!got.equals(expectedSha256, ignoreCase = true)) {
+                part.delete()
+                meta.delete()
+                throw IOException("SHA-256")
+            }
         }
         dest.delete()
         if (!part.renameTo(dest)) throw IOException("rename ${part.name}")

@@ -123,7 +123,8 @@ object Zips {
                 return Configs.Outcome.Failed(e.message ?: e.javaClass.simpleName)
             }
         try {
-            if (z.sha256.isNotBlank() && !sha256(file).equals(z.sha256, ignoreCase = true)) return Configs.Outcome.Failed("SHA-256")
+            // Nothing from the network is flashed unchecked: an index entry without its SHA-256 is refused.
+            if (z.sha256.isBlank() || !sha256(file).equals(z.sha256, ignoreCase = true)) return Configs.Outcome.Failed("SHA-256")
             val r = file.inputStream().use { Configs.flash(it, "${z.id}.zip") }
             History.add(
                 context,
@@ -157,7 +158,7 @@ object Zips {
             }
         try {
             val sum = sha256(file)
-            if (z.imageSha256.isNotBlank() && !sum.equals(z.imageSha256, ignoreCase = true)) return Configs.Outcome.Failed("SHA-256")
+            if (z.imageSha256.isBlank() || !sum.equals(z.imageSha256, ignoreCase = true)) return Configs.Outcome.Failed("SHA-256")
             val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(java.util.Date())
             val size = file.length()
             val script =

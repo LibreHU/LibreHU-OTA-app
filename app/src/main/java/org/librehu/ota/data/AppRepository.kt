@@ -694,7 +694,7 @@ class AppRepository private constructor(
             var lastDone = -1L
             var lastAt = 0L
             val apk =
-                Installer.download(context, release.apkUrl, "$pkg.apk", release.size, { pkg in pauses }) { done, total ->
+                Installer.download(context, release.apkUrl, "$pkg.apk", release.size, { pkg in pauses }, release.sha256) { done, total ->
                     val now = android.os.SystemClock.elapsedRealtime()
                     if (lastDone >= 0 && now > lastAt) {
                         // Smoothed over about two seconds (updates every 250 ms).
