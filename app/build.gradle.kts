@@ -16,6 +16,9 @@ fun git(vararg args: String): String? =
         null
     }
 
+// "-<branch>" at the end of versionName: the branch (edition) the APK was built from (GITHUB_REF_NAME in the CI).
+fun branchName(): String = System.getenv("GITHUB_REF_NAME")?.takeIf { it.isNotBlank() } ?: git("rev-parse", "--abbrev-ref", "HEAD") ?: "local"
+
 android {
     namespace = "org.librehu.ota"
     compileSdk = 37
@@ -26,7 +29,7 @@ android {
         minSdk = 28
         targetSdk = 35
         versionCode = git("rev-list", "--count", "HEAD")?.toIntOrNull() ?: 1
-        versionName = git("describe", "--tags", "--always", "--dirty", "--exclude", "latest-*", "--exclude", "build-*") ?: "dev"
+        versionName = (git("describe", "--tags", "--always", "--dirty", "--exclude", "latest-*", "--exclude", "build-*") ?: "dev") + "-" + branchName()
     }
     // One signing key for every LibreHU app, so that updates (LibreHU OTA) install over each other: LIBREHU_KEYSTORE*
     // from the CI secrets when set, else keystore/librehu.jks of the repository.

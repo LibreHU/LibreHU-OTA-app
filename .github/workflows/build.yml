@@ -74,9 +74,11 @@ jobs:
           OUT="$APP-$SLUG.apk"
           cp "$(ls app/build/outputs/apk/release/*.apk | head -n1)" "$OUT"
           CODE=$(git rev-list --count HEAD)
-          NAME=$(git describe --tags --always --exclude 'latest-*' --exclude 'build-*')
-          printf 'versionCode=%s\nversionName=%s\nbranch=%s\ncommit=%s\n\n%s\n' \
-            "$CODE" "$NAME" "$BRANCH" "$GITHUB_SHA" "$(git log -1 --pretty=%s)" > notes.txt
+          NAME="$(git describe --tags --always --exclude 'latest-*' --exclude 'build-*')-$BRANCH"
+          # SHA-256 of the APK: LibreHU Apps checks the download against it.
+          SHA=$(sha256sum "$OUT" | cut -d' ' -f1)
+          printf 'versionCode=%s\nversionName=%s\nbranch=%s\ncommit=%s\nsha256=%s\n\n%s\n' \
+            "$CODE" "$NAME" "$BRANCH" "$GITHUB_SHA" "$SHA" "$(git log -1 --pretty=%s)" > notes.txt
           git tag -f "$TAG" "$GITHUB_SHA"
           git push -f origin "refs/tags/$TAG"
           if gh release view "$TAG" >/dev/null 2>&1; then
