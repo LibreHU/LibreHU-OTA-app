@@ -28,7 +28,10 @@ class ThemeFollower(
                 intent: Intent,
             ) {
                 when (intent.action) {
-                    ACTION_THEME_CHANGED -> onChange(intent.getBooleanExtra("dark", true), intent.getIntExtra("accent", 0))
+                    ACTION_THEME_CHANGED -> {
+                        RetroLook.read(intent)
+                        onChange(intent.getBooleanExtra("dark", true), intent.getIntExtra("accent", 0))
+                    }
                     else -> refresh() // configuration changed (system night mode)
                 }
             }
@@ -62,7 +65,12 @@ class ThemeFollower(
         val fromLauncher =
             try {
                 context.contentResolver.query(URI, null, null, null, null)?.use { c ->
-                    if (c.moveToFirst()) (c.getInt(0) != 0) to c.getInt(1) else null
+                    if (c.moveToFirst()) {
+                        RetroLook.read(c)
+                        (c.getInt(0) != 0) to c.getInt(1)
+                    } else {
+                        null
+                    }
                 }
             } catch (_: Exception) {
                 null

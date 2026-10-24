@@ -57,7 +57,24 @@ data class CarPalette(
 
 /** Car UI colours, shared by the LibreHU apps; snapshot state so the UI recomposes on theme changes. */
 object CarColors {
-    var palette: CarPalette by mutableStateOf(CarPalette.of(true))
+    private var base: CarPalette by mutableStateOf(CarPalette.of(true))
+
+    /** The app's palette, or LibreHU Launcher's retro one when its style is retro (same light / dark only). */
+    var palette: CarPalette
+        get() = RetroLook.palette?.takeIf { it.dark == base.dark }?.let { r ->
+            base.copy(
+                background = r.background,
+                surface = r.surface,
+                surfaceHigh = r.surfaceHigh,
+                accent = r.accent,
+                onAccent = r.onAccent,
+                text = r.text,
+                textDim = r.textDim,
+            )
+        } ?: base
+        set(value) {
+            base = value
+        }
 
     val Background: Color get() = palette.background
     val Surface: Color get() = palette.surface
@@ -96,6 +113,7 @@ fun CarTheme(content: @Composable () -> Unit) {
             )
         }
     MaterialTheme(
+        typography = RetroLook.typography(),
         colorScheme = scheme.withCarRoles(p.accent, p.onAccent, p.surface, p.surfaceHigh, p.text, p.textDim),
         content = content,
     )

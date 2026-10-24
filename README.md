@@ -242,3 +242,10 @@ zips et des configs, servent à nommer des fichiers et entrent dans des commande
 (paquet `a.b.c`, dépôt `propriétaire/nom`, identifiant en lettres, chiffres, `.`, `_` ou `-`) est ignorée. Sur
 Android 11 et plus, `QUERY_ALL_PACKAGES` sert à voir toutes les applis du catalogue, même celles qu'il ajoute plus
 tard.
+
+**Style rétro de LibreHU Launcher** : quand le launcher est en style rétro (VFD ambre, LCD vert, cassette), cette appli
+prend sa palette (jour ou nuit) et sa police d'afficheur à segments, en majuscules sans accents (« LibreHU Seg14 »,
+tirée de DSEG14 © keshikan, SIL Open Font License 1.1, voir `third_party/DSEG-LICENSE.txt`). Le launcher publie le
+style et la palette par `content://org.librehu.launcher.theme/theme` (colonnes `style`, `background`, `surface`,
+`surface_high`, `on_accent`, `text`, `text_dim`) et par la diffusion `org.librehu.action.THEME_CHANGED` (mêmes noms
+en extras).
