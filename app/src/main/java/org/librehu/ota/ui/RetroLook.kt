@@ -12,14 +12,19 @@ import androidx.compose.ui.text.font.FontFamily
 import org.librehu.ota.R
 
 /**
- * Retro style of LibreHU Launcher (VFD amber, green LCD, cassette), followed by this app: the launcher publishes it with
- * its palette (provider `org.librehu.launcher.theme`, columns / extras `style`, `background`, `surface`,
- * `surface_high`, `on_accent`, `text`, `text_dim`, and `accent`), and the segment display font of the launcher
- * (LibreHU Seg14, DSEG14 with bare letters for the accented ones: capitals without accents, SIL OFL 1.1).
+ * Retro style of LibreHU Launcher (a display's colours drawn from its accent colour) and its font, followed by this
+ * app: the launcher publishes them (provider `org.librehu.launcher.theme`, columns / extras `style`, `font`,
+ * `background`, `surface`, `surface_high`, `on_accent`, `text`, `text_dim`, and `accent`). The segment display font
+ * (LibreHU Seg14, DSEG14 with bare letters for the accented ones: capitals without accents, SIL OFL 1.1) is chosen
+ * apart from the style.
  */
 object RetroLook {
     /** The launcher's palette when its style is retro, null for the modern look (or an older launcher). */
     var palette: Palette? by mutableStateOf(null)
+        private set
+
+    /** Segment display font chosen in the launcher (an older launcher: with its retro styles). */
+    var segment: Boolean by mutableStateOf(false)
         private set
 
     data class Palette(
@@ -37,6 +42,11 @@ object RetroLook {
 
     /** From the provider's row (cursor on it). */
     fun read(c: Cursor) {
+        segment =
+            runCatching {
+                val i = c.getColumnIndex("font")
+                if (i >= 0) c.getString(i) == "segment" else c.getString(c.getColumnIndexOrThrow("style"))?.startsWith("retro") == true
+            }.getOrDefault(false)
         palette =
             runCatching {
                 val style = c.getString(c.getColumnIndexOrThrow("style"))
@@ -49,6 +59,7 @@ object RetroLook {
     /** From the launcher's THEME_CHANGED broadcast. */
     fun read(i: Intent) {
         val style = i.getStringExtra("style")
+        segment = i.getStringExtra("font")?.let { it == "segment" } ?: (style?.startsWith("retro") == true)
         palette =
             if (style == null || !style.startsWith("retro") || COLORS.any { !i.hasExtra(it) }) {
                 null
@@ -58,9 +69,9 @@ object RetroLook {
             }
     }
 
-    /** Segment display font everywhere in the retro styles, Material's otherwise. */
+    /** Segment display font everywhere when chosen in the launcher, Material's otherwise. */
     fun typography(): Typography {
-        if (palette == null) return Typography()
+        if (!segment) return Typography()
         val f = FontFamily(Font(R.font.librehu_seg14))
         return Typography().run {
             copy(
