@@ -30,7 +30,10 @@ object Root {
         val output: String,
     )
 
-    /** Runs [command] as root, [stdin] streamed to it; null when `su` is missing or the command timed out. */
+    /**
+     * Runs [command] as root, [stdin] streamed to it; null when `su` is missing or the command timed out. Output and
+     * input go through their own threads: the timeout holds even when the command never ends nor closes its output.
+     */
     fun run(
         command: String,
         stdin: InputStream? = null,
@@ -38,20 +41,35 @@ object Root {
     ): Output? =
         try {
             val p = ProcessBuilder("su", "-c", command).redirectErrorStream(true).start()
-            val writer =
+            val out = StringBuilder()
+            val reader =
                 Thread {
                     try {
-                        p.outputStream.use { out -> stdin?.use { it.copyTo(out) } }
+                        val text = p.inputStream.bufferedReader().readText()
+                        synchronized(out) { out.append(text) }
                     } catch (_: Exception) {
                     }
-                }.apply { start() }
-            val out = p.inputStream.bufferedReader().readText()
-            writer.join(1000)
+                }.apply {
+                    isDaemon = true
+                    start()
+                }
+            Thread {
+                try {
+                    p.outputStream.use { o -> stdin?.use { it.copyTo(o) } }
+                } catch (_: Exception) {
+                }
+            }.apply {
+                isDaemon = true
+                start()
+            }
             if (!p.waitFor(timeoutS, TimeUnit.SECONDS)) {
                 p.destroy()
+                reader.join(500)
+                Log.w(TAG, "$command: timeout ${timeoutS}s")
                 null
             } else {
-                Output(p.exitValue(), out.trim())
+                reader.join(2_000)
+                Output(p.exitValue(), synchronized(out) { out.toString() }.trim())
             }
         } catch (e: Exception) {
             Log.w(TAG, "$command: ${e.message}")
