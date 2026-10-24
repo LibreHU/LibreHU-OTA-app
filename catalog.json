@@ -121,6 +121,17 @@
       "tagged": false
     },
     {
+      "id": "helper",
+      "name": "LibreHU Helper",
+      "repo": "LibreHU/LibreHU-helper-app",
+      "package": "org.librehu.helper",
+      "description": "Diagnostic et portage",
+      "branches": [
+        "main"
+      ],
+      "tagged": false
+    },
+    {
       "id": "headunit",
       "name": "Android Auto (Open Headunit LibreHU)",
       "repo": "LibreHU/LibreHU-open-headunit-app",

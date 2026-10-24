@@ -86,6 +86,7 @@ object Catalog {
                 branches = listOf("librehu-service"),
             ),
             CatalogApp("mcutools", "MCU Toolkit", "LibreHU/MCU-tools-app", "com.dokt.jacmcu", "Diagnostic MCU"),
+            CatalogApp("helper", "LibreHU Helper", "LibreHU/LibreHU-helper-app", "org.librehu.helper", "Diagnostic et portage"),
             CatalogApp(
                 "headunit",
                 "Android Auto (Open Headunit LibreHU)",
