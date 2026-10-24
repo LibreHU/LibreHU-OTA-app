@@ -246,6 +246,13 @@ commit de la branche (sinon la CI a échoué ou tourne encore : LibreHU Apps mon
 `main` : un correctif poussé seulement sur `main` n'arrive dans cette édition qu'une fois `main` fusionnée dedans. La
 mise à jour est proposée quand le `versionCode` publié dépasse celui installé (nombre de commits de la branche).
 
+## Appli téléphone (LibreHU Bridge)
+
+Réglable depuis le téléphone par l'appli LibreHU Bridge (Android et iPhone), à travers LibreHU-service : les applis (versions, vérifier, installer, mettre à jour) et tous les réglages (édition, vérifications, installations, /system).
+Fournisseur `<paquet>.bridge` (`bridge/BridgeProvider.kt`), réservé aux applis signées avec la clé LibreHU (permission
+`org.librehu.permission.BRIDGE`, vérifiée dans `call()` lui-même) ; format décrit dans
+[LibreHU-service, docs/bridge.md](https://github.com/LibreHU/LibreHU-service/blob/main/docs/bridge.md).
+
 ## Construire
 
 Action **Build** (artefact et release `latest-main`), ou `./gradlew :app:assembleDebug` avec le SDK Android.

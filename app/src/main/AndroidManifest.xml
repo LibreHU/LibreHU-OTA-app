@@ -51,6 +51,11 @@
         <package android:name="com.rifsxd.ksunext" />
     </queries>
 
+    <!-- LibreHU apps (same signing key): LibreHU-service's bridge reads and changes this app's settings for the phone app. -->
+    <permission
+        android:name="org.librehu.permission.BRIDGE"
+        android:protectionLevel="signature" />
+
     <application
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
@@ -113,5 +118,11 @@
                 <action android:name="org.librehu.action.REQUEST_ROOT" />
             </intent-filter>
         </receiver>
+        <!-- Settings pages for LibreHU's phone app, read and changed by LibreHU-service's bridge (.bridge.BridgeProvider). -->
+        <provider
+            android:name=".bridge.BridgeProvider"
+            android:authorities="org.librehu.ota.bridge"
+            android:exported="true"
+            android:permission="org.librehu.permission.BRIDGE" />
     </application>
 </manifest>
