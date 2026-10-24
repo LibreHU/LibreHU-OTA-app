@@ -139,6 +139,9 @@ class BootReceiver : BroadcastReceiver() {
             CheckJob.schedule(context)
             // A fresh list after each start, as soon as there is network.
             CheckJob.scheduleOnce(context)
+            // Native code for the apps not compiled yet (without LibreHU-service, which does it itself).
+            org.librehu.ota.install.CompileJob
+                .schedule(context)
         }
     }
 }

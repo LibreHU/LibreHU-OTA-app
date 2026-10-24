@@ -86,6 +86,7 @@ fun SettingsScreen(repo: AppRepository) {
                     edition,
                 ) { repo.setEdition(it) }
                 Hint(stringResource(R.string.edition_hint))
+                Pill(stringResource(R.string.setup_open), small = true) { org.librehu.ota.ui.setup.QuickSetupState.open() }
                 Hint(
                     stringResource(
                         when (root) {

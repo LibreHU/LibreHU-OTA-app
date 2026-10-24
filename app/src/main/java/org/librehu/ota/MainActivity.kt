@@ -25,6 +25,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         theme.value.start()
         CheckJob.schedule(this)
+        org.librehu.ota.ui.setup.QuickSetupState
+            .load(this)
+        // Native code for the apps not compiled yet, a minute after (without LibreHU-service only).
+        org.librehu.ota.install.CompileJob
+            .schedule(this)
         val repo = AppRepository.get(this)
         repo.refreshInstalled()
         // Always a fresh list with network; without, the one kept from the last check, and a check as soon as the

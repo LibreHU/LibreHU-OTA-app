@@ -25,6 +25,17 @@ quelle que soit la page affichée. Le code de l'interface est rangé par page (`
 installation (`install/`) n'ont pas changé.
 
 ## Fonctions
+- **Configuration rapide** : au premier lancement (et depuis Réglages → *Configuration rapide*), en quatre étapes :
+  l'édition (LibreHU service, ivi-services de Jancar ou générique), le root (installations silencieuses), les applis
+  (toutes celles du catalogue pour l'édition sont cochées, celles installées et à jour ne sont pas listées), puis leur
+  installation avec l'avancement de chacune. *Passer* la ferme ; tout reste modifiable ensuite.
+- **Compilation** (onglet) : comme LibreHU-service → Tweaks. Android 9 installe une appli hors Play Store en
+  `speed-profile`, qui sans profil revient à `verify` (pas de code natif), et ne compile qu'appareil inactif et en
+  charge, ce qui n'arrive presque jamais sur un autoradio. L'onglet liste les applis du catalogue installées et les
+  applis ajoutées, avec leur filtre lu dans `dumpsys package dexopt` ; compiler une appli ou toutes
+  (`cmd package compile -m speed -f`, root), une fois par version installée ; interrupteur par appli. **Automatique**
+  (une minute après chaque démarrage et à l'ouverture, `CompileJob`) **seulement sans LibreHU-service**, qui le fait
+  déjà lui-même : avec lui, l'onglet sert à la demande.
 - **Hors ligne** : la liste des applis et leurs dernières versions est gardée après chaque vérification. Sans réseau,
   elle s'affiche telle quelle (« Pas de réseau : liste du … ») sans requête ratée ; avec réseau, chaque ouverture de
   LibreHU Apps vérifie à nouveau, ainsi qu'une fois après chaque démarrage de l'autoradio (dès que le réseau est là),
@@ -129,7 +140,7 @@ installation (`install/`) n'ont pas changé.
   notifications et de l'installation en arrière-plan.
 - **Réglages** : vérification en arrière-plan (activée, toutes les 6 h / 12 h / 1 j / 2 j / 7 j, Wi-Fi
   seulement, notification, **installation automatique** en root), méthode d'installation (automatique / root
-  seulement / installateur Android), compilation après installation (speed-profile, une appli à la fois),
+  seulement / installateur Android), compilation après installation (speed, une appli à la fois),
   téléchargements simultanés, garder ou supprimer les APK téléchargés, **jeton GitHub** facultatif (5000 requêtes
   par heure au lieu de 60, envoyé seulement à api.github.com), **historique** des installations, configurations et
   flashs (date, versions avant → après, résultat) dans la page Téléchargements.

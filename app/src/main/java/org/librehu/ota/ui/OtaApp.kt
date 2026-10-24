@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.Badge
@@ -74,6 +75,7 @@ enum class Page(
     APPS(Icons.Default.Apps, R.string.nav_apps),
     UPDATES(Icons.Default.SystemUpdate, R.string.nav_updates),
     ZIPS(Icons.Default.Archive, R.string.nav_zips),
+    COMPILE(Icons.Default.Speed, R.string.nav_compile),
     DOWNLOADS(Icons.Default.Download, R.string.nav_downloads),
     SETTINGS(Icons.Default.Settings, R.string.nav_settings),
 }
@@ -145,7 +147,7 @@ fun OtaApp(
                 title = if (d != null) apps.firstOrNull { it.app.packageName == d }?.app?.name.orEmpty() else stringResource(page.label),
                 subtitle = if (d == null) status(context, busy, message, repo.lastCheck, offline) else null,
                 onBack = if (d != null) ({ details = null }) else null,
-                onRefresh = if (d == null && page != Page.SETTINGS) ({ repo.check() }) else null,
+                onRefresh = if (d == null && page != Page.SETTINGS && page != Page.COMPILE) ({ repo.check() }) else null,
                 busy = busy,
                 onBulk = { bulk = true },
                 onReboot = { repo.reboot() },
@@ -162,6 +164,7 @@ fun OtaApp(
                         Page.APPS -> AppsScreen(repo, open, show)
                         Page.UPDATES -> UpdatesScreen(repo, open, show)
                         Page.ZIPS -> ZipsScreen()
+                        Page.COMPILE -> org.librehu.ota.ui.compile.CompileScreen()
                         Page.DOWNLOADS -> DownloadsScreen(repo, show)
                         Page.SETTINGS -> SettingsScreen(repo)
                     }
@@ -171,6 +174,10 @@ fun OtaApp(
     }
     apps.firstOrNull { it.needsChoice }?.let { ChoiceDialogs(it, repo) }
     if (bulk) org.librehu.ota.ui.details.BulkSystemDialog(repo) { bulk = false }
+    // Quick setup over everything: at the first start, or from the settings.
+    val setup by org.librehu.ota.ui.setup.QuickSetupState.shown
+        .collectAsStateWithLifecycle()
+    if (setup == true) org.librehu.ota.ui.setup.QuickSetup(repo)
 }
 
 @Composable

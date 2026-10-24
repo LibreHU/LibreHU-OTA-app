@@ -81,6 +81,12 @@
             android:name=".CheckJob"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- Native compilation a minute after a start, without LibreHU-service (install/AppCompiler.kt). -->
+        <service
+            android:name=".install.CompileJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
         <!-- LibreHU Launcher's first start: root asked for every LibreHU app at once (RootRequestReceiver). -->
         <receiver
             android:name=".RootRequestReceiver"
