@@ -96,6 +96,64 @@
      "home"
     ],
     [
+     "home"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "tap",
+     "^Paramètres du launcher$"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "tap",
+     "^Sombre$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "home"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "shot",
+     "home"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "drawer"
+    ],
+    [
+     "back"
+    ],
+    [
+     "home"
+    ],
+    [
      "tapxy",
      52,
      451
@@ -150,6 +208,34 @@
      "settings-look-4"
     ],
     [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
      "tap",
      "^Horloge de veille$"
     ],
@@ -171,6 +257,34 @@
     [
      "shot",
      "settings-standby-2"
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
     ],
     [
      "tap",
@@ -196,6 +310,34 @@
      "settings-lock-2"
     ],
     [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
      "tap",
      "^Conduite$"
     ],
@@ -219,6 +361,34 @@
      "settings-driving-2"
     ],
     [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
      "tap",
      "^Langue et heure$"
     ],
@@ -240,6 +410,34 @@
     [
      "shot",
      "settings-region-2"
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
+    ],
+    [
+     "swipe",
+     900,
+     180,
+     900,
+     620
     ],
     [
      "tap",
@@ -288,7 +486,15 @@
      "lock"
     ],
     [
-     "back"
+     "swipe",
+     522,
+     648,
+     800,
+     648
+    ],
+    [
+     "wait",
+     2
     ],
     [
      "home"
@@ -312,10 +518,6 @@
     ],
     [
      "tap",
-     "^Personnalisation$"
-    ],
-    [
-     "tap",
      "^Afficheur rétro$"
     ],
     [
@@ -325,6 +527,33 @@
     [
      "shot",
      "settings-retro"
+    ],
+    [
+     "home"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "tap",
+     "^Paramètres du launcher$"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
     ],
     [
      "swipe",
@@ -345,15 +574,35 @@
      "^Afficheur : dauphins$"
     ],
     [
+     "wait",
+     2
+    ],
+    [
      "home"
     ],
     [
      "wait",
-     4
+     5
     ],
     [
      "shot",
      "home-retro-dolphins"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "drawer-retro"
+    ],
+    [
+     "back"
     ],
     [
      "start",
@@ -379,7 +628,15 @@
      "lock-retro"
     ],
     [
-     "back"
+     "swipe",
+     522,
+     648,
+     800,
+     648
+    ],
+    [
+     "wait",
+     2
     ],
     [
      "home"
@@ -400,6 +657,13 @@
     [
      "wait",
      3
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
     ],
     [
      "swipe",
@@ -420,15 +684,22 @@
      "^Afficheur : espace$"
     ],
     [
+     "wait",
+     2
+    ],
+    [
      "home"
     ],
     [
      "wait",
-     4
+     5
     ],
     [
      "shot",
      "home-retro-space"
+    ],
+    [
+     "home"
     ],
     [
      "tapxy",
@@ -462,19 +733,213 @@
      180
     ],
     [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
      "tap",
      "^Afficheur : cassette$"
+    ],
+    [
+     "wait",
+     2
     ],
     [
      "home"
     ],
     [
      "wait",
-     4
+     5
     ],
     [
      "shot",
      "home-retro-cassette"
+    ],
+    [
+     "home"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "tap",
+     "^Paramètres du launcher$"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "tap",
+     "^Afficheur : analyseur de spectre$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "home"
+    ],
+    [
+     "wait",
+     5
+    ],
+    [
+     "shot",
+     "home-retro-analyzer"
+    ],
+    [
+     "home"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "tap",
+     "^Paramètres du launcher$"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "tap",
+     "^Afficheur : route de nuit$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "home"
+    ],
+    [
+     "wait",
+     5
+    ],
+    [
+     "shot",
+     "home-retro-road"
+    ],
+    [
+     "home"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "tap",
+     "^Paramètres du launcher$"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "tap",
+     "^Afficheur : rallye old school$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "home"
+    ],
+    [
+     "wait",
+     5
+    ],
+    [
+     "shot",
+     "home-retro-rally"
+    ],
+    [
+     "home"
     ],
     [
      "tapxy",
@@ -498,33 +963,11 @@
      "^Moderne$"
     ],
     [
-     "swipe",
-     900,
-     620,
-     900,
-     180
-    ],
-    [
-     "swipe",
-     900,
-     620,
-     900,
-     180
-    ],
-    [
-     "tap",
-     "^Vaporwave$"
+     "wait",
+     2
     ],
     [
      "home"
-    ],
-    [
-     "wait",
-     4
-    ],
-    [
-     "shot",
-     "home-vaporwave"
     ],
     [
      "tapxy",
@@ -558,19 +1001,213 @@
      180
     ],
     [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
      "tap",
-     "^Aurore$"
+     "^Vaporwave$"
+    ],
+    [
+     "wait",
+     2
     ],
     [
      "home"
     ],
     [
      "wait",
-     4
+     5
+    ],
+    [
+     "shot",
+     "home-vaporwave"
+    ],
+    [
+     "home"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "tap",
+     "^Paramètres du launcher$"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "tap",
+     "^Aurore$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "home"
+    ],
+    [
+     "wait",
+     5
     ],
     [
      "shot",
      "home-aurora"
+    ],
+    [
+     "home"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "tap",
+     "^Paramètres du launcher$"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "tap",
+     "^Étoiles$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "home"
+    ],
+    [
+     "wait",
+     5
+    ],
+    [
+     "shot",
+     "home-stars"
+    ],
+    [
+     "home"
+    ],
+    [
+     "tapxy",
+     52,
+     451
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "tap",
+     "^Paramètres du launcher$"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "tap",
+     "^Vagues$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "home"
+    ],
+    [
+     "wait",
+     5
+    ],
+    [
+     "shot",
+     "home-waves"
+    ],
+    [
+     "home"
     ],
     [
      "tapxy",
@@ -1060,10 +1697,6 @@
      2
     ],
     [
-     "shot",
-     "gps"
-    ],
-    [
      "swipe",
      900,
      620,
@@ -1072,7 +1705,7 @@
     ],
     [
      "shot",
-     "gps-2"
+     "gps"
     ],
     [
      "tap",
@@ -1141,6 +1774,17 @@
     [
      "shot",
      "tweaks-4"
+    ],
+    [
+     "swipe",
+     52,
+     650,
+     52,
+     100
+    ],
+    [
+     "wait",
+     1
     ],
     [
      "tap",
@@ -1466,6 +2110,13 @@
     [
      "shot",
      "test"
+    ],
+    [
+     "tap",
+     "^Fermer$"
+    ],
+    [
+     "back"
     ]
    ]
   },
@@ -1484,14 +2135,15 @@
      "settings"
     ],
     [
-     "start",
-     "1.2",
-     "-a",
-     "org.librehu.easysource.action.NEXT"
+     "swipe",
+     900,
+     620,
+     900,
+     180
     ],
     [
      "shot",
-     "switcher"
+     "settings-2"
     ]
    ]
   },
@@ -1504,6 +2156,18 @@
     [
      "launch",
      10
+    ],
+    [
+     "shot",
+     "setup"
+    ],
+    [
+     "tap",
+     "^Passer$"
+    ],
+    [
+     "wait",
+     3
     ],
     [
      "shot",
@@ -1913,16 +2577,15 @@
      "main"
     ],
     [
-     "tap",
-     "^Associer un autoradio$"
-    ],
-    [
-     "wait",
-     2
+     "swipe",
+     900,
+     620,
+     900,
+     180
     ],
     [
      "shot",
-     "pair"
+     "main-2"
     ]
    ]
   },
@@ -1938,18 +2601,55 @@
     ],
     [
      "shot",
-     "main"
+     "welcome"
     ],
     [
-     "swipe",
-     900,
-     620,
-     900,
-     180
+     "tap",
+     "^Suivant$"
+    ],
+    [
+     "wait",
+     2
     ],
     [
      "shot",
-     "main-2"
+     "setup-2"
+    ],
+    [
+     "tap",
+     "^Suivant$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "setup-3"
+    ],
+    [
+     "tap",
+     "^Suivant$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "setup-4"
+    ],
+    [
+     "tap",
+     "^(Terminer|Suivant)$"
+    ],
+    [
+     "wait",
+     3
+    ],
+    [
+     "shot",
+     "main"
     ]
    ]
   },
@@ -1966,17 +2666,6 @@
     [
      "shot",
      "main"
-    ],
-    [
-     "swipe",
-     900,
-     620,
-     900,
-     180
-    ],
-    [
-     "shot",
-     "main-2"
     ]
    ]
   }
