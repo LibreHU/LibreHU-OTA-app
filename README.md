@@ -224,12 +224,14 @@ au paquet indiqué dans `reply_to`. Rien d'autre que `id` n'est lancé ; une sec
 
 | | |
 |---|---|
-| ![Applis](docs/screenshots/apps.png)<br>Applis | ![Fiche](docs/screenshots/details.png)<br>Fiche d'une appli |
-| ![Versions](docs/screenshots/versions.png)<br>Versions | ![Journal](docs/screenshots/logs.png)<br>Journal |
-| ![Mises à jour](docs/screenshots/updates.png)<br>Mises à jour | ![Zips](docs/screenshots/zips.png)<br>Zips |
-| ![Téléchargements](docs/screenshots/downloads.png)<br>Téléchargements | ![Réglages](docs/screenshots/settings.png)<br>Réglages |
+| ![Configuration](docs/screenshots/setup.png)<br>Configuration | ![Applis](docs/screenshots/apps.png)<br>Applis |
+| ![Fiche d'une appli](docs/screenshots/details.png)<br>Fiche d'une appli | ![Versions](docs/screenshots/versions.png)<br>Versions |
+| ![Changements](docs/screenshots/logs.png)<br>Changements | ![Mises à jour](docs/screenshots/updates.png)<br>Mises à jour |
+| ![Zips](docs/screenshots/zips.png)<br>Zips | ![Téléchargements](docs/screenshots/downloads.png)<br>Téléchargements |
+| ![Réglages](docs/screenshots/settings.png)<br>Réglages | ![Réglages (2)](docs/screenshots/settings-2.png)<br>Réglages (2) |
+| ![Réglages (3)](docs/screenshots/settings-3.png)<br>Réglages (3) |   |
 
-Captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans autoradio branché : les valeurs du véhicule et de la MCU sont vides. Refaites-les avec l'action **Screenshots** de [LibreHU-OTA-app](https://github.com/LibreHU/LibreHU-OTA-app/tree/main/screenshots).
+Captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans autoradio branché : les valeurs du véhicule et de la MCU sont vides. Refaites-les avec l'action **Screenshots** de [LibreHU-OTA-app](https://github.com/LibreHU/LibreHU-OTA-app/tree/main/screenshots). Galerie : [librehu.github.io/screenshots/ota.html](https://librehu.github.io/screenshots/ota.html).
 
 ## Captures automatiques
 
