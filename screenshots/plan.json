@@ -2241,6 +2241,48 @@
     ],
     [
      "tap",
+     "^Noyau$"
+    ],
+    [
+     "wait",
+     4
+    ],
+    [
+     "shot",
+     "zips-kernel"
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "zips-kernel-2"
+    ],
+    [
+     "swipe",
+     900,
+     620,
+     900,
+     180
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "zips-kernel-3"
+    ],
+    [
+     "tap",
      "^Téléchargements$"
     ],
     [
