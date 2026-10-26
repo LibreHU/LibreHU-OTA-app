@@ -16,6 +16,14 @@ data class ZipCategory(
     val id: String,
     val name: String,
     val description: String,
+    /** Sections of the category, in display order. */
+    val subcategories: List<ZipSubcategory> = emptyList(),
+)
+
+data class ZipSubcategory(
+    val id: String,
+    val name: String,
+    val description: String,
 )
 
 /** A flashable zip of the LibreHU-flashablesZips repository (its index.json). */
@@ -42,6 +50,16 @@ data class FlashZip(
     val hidden: Boolean,
     val upstream: String,
     val license: String,
+    /** Section of its category (empty: after the known ones). */
+    val subcategory: String = "",
+    /** Zips shown on one card, each one a [variant] of it (empty: alone). */
+    val group: String = "",
+    val groupName: String = "",
+    val groupDescription: String = "",
+    val variant: String = "",
+    /** Smaller first. */
+    val order: Int = Int.MAX_VALUE,
+    val screenshots: List<String> = emptyList(),
 ) {
     val compatible get() = devices.isEmpty() || Build.DEVICE in devices
 }
@@ -84,6 +102,13 @@ object Zips {
                     c.getString("id"),
                     (if (fr) c.optString("name_fr") else "").ifEmpty { c.optString("name", c.getString("id")) },
                     (if (fr) c.optString("description_fr") else "").ifEmpty { c.optString("description") },
+                    c.optJSONArray("subcategories").objects().map { sc ->
+                        ZipSubcategory(
+                            sc.getString("id"),
+                            (if (fr) sc.optString("name_fr") else "").ifEmpty { sc.optString("name", sc.getString("id")) },
+                            (if (fr) sc.optString("description_fr") else "").ifEmpty { sc.optString("description") },
+                        )
+                    },
                 )
             }
         val zips =
@@ -108,6 +133,13 @@ object Zips {
                     hidden = z.optBoolean("hidden"),
                     upstream = z.optString("upstream"),
                     license = z.optString("license"),
+                    subcategory = z.optString("subcategory"),
+                    group = z.optString("group"),
+                    groupName = z.optString("group_name"),
+                    groupDescription = z.optString("group_description"),
+                    variant = z.optString("variant"),
+                    order = if (z.has("order")) z.optInt("order", Int.MAX_VALUE) else Int.MAX_VALUE,
+                    screenshots = z.optJSONArray("screenshots").strings().filter { it.startsWith("https://") },
                 )
             }
         return ZipIndex(cats, zips, o.optLong("generated"))

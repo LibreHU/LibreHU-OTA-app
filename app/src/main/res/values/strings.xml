@@ -141,6 +141,12 @@
     <string name="zips_error">Index not received: %1$s</string>
     <string name="zips_all">All</string>
     <string name="zips_empty">No zip in this category.</string>
+    <string name="zips_other">Other</string>
+    <string name="zips_details">Details</string>
+    <string name="zips_less">Less</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="details_screenshots">Screenshots</string>
     <string name="zips_incompatible">Not for this device (%1$s; made for %2$s).</string>
     <string name="zips_flash">Flash with TWRP</string>
     <string name="zips_write_image">Write to %1$s now</string>

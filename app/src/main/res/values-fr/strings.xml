@@ -141,6 +141,12 @@
     <string name="zips_error">Index non reçu : %1$s</string>
     <string name="zips_all">Toutes</string>
     <string name="zips_empty">Aucun zip dans cette catégorie.</string>
+    <string name="zips_other">Autres</string>
+    <string name="zips_details">Détails</string>
+    <string name="zips_less">Moins</string>
+    <string name="previous">Précédente</string>
+    <string name="next">Suivante</string>
+    <string name="details_screenshots">Captures d\'écran</string>
     <string name="zips_incompatible">Pas pour cet appareil (%1$s ; prévu pour %2$s).</string>
     <string name="zips_flash">Flasher avec TWRP</string>
     <string name="zips_write_image">Écrire dans %1$s maintenant</string>

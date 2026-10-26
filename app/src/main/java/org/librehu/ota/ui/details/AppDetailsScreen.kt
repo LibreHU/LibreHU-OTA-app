@@ -49,6 +49,8 @@ import org.librehu.ota.data.AppRepository
 import org.librehu.ota.data.AppState
 import org.librehu.ota.data.OtaSettingsStore
 import org.librehu.ota.data.Release
+import org.librehu.ota.data.Screenshots
+import org.librehu.ota.data.Shot
 import org.librehu.ota.install.Root
 import org.librehu.ota.ui.CarColors
 import org.librehu.ota.ui.components.AppAction
@@ -58,6 +60,7 @@ import org.librehu.ota.ui.components.ErrorColor
 import org.librehu.ota.ui.components.Hint
 import org.librehu.ota.ui.components.InfoRow
 import org.librehu.ota.ui.components.Pill
+import org.librehu.ota.ui.components.ScreenshotStrip
 import org.librehu.ota.ui.components.SectionTitle
 import org.librehu.ota.ui.components.StatusChip
 import org.librehu.ota.ui.components.TaskProgress
@@ -67,7 +70,10 @@ import org.librehu.ota.ui.components.statusLabel
 import org.librehu.ota.ui.components.working
 import org.librehu.ota.ui.updates.ChangesList
 
-/** One app: what is installed where, what GitHub has, every build kept, its log, and the /system install. */
+/**
+ * One app: what is installed where, its screenshots (gallery of the LibreHU site), what GitHub has, every build kept,
+ * its log, and the /system install.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AppDetailsScreen(
@@ -84,6 +90,8 @@ fun AppDetailsScreen(
     LaunchedEffect(Unit) { root = withContext(Dispatchers.IO) { Root.isAvailable() } }
     var logs by remember { mutableStateOf(false) }
     var uninstall by remember { mutableStateOf(false) }
+    var shots by remember(s.app.id) { mutableStateOf<List<Shot>>(emptyList()) }
+    LaunchedEffect(s.app.id) { shots = withContext(Dispatchers.IO) { Screenshots.forApp(s.app.id) } }
     val ignored = pkg in settings.ignored
 
     LazyColumn(
@@ -126,6 +134,14 @@ fun AppDetailsScreen(
                         }
                         if (s.task != org.librehu.ota.data.Task.Idle) Pill(stringResource(R.string.dismiss), small = true) { repo.dismiss(pkg) }
                     }
+                }
+            }
+        }
+        if (shots.isNotEmpty()) {
+            item {
+                Card {
+                    SectionTitle(stringResource(R.string.details_screenshots))
+                    ScreenshotStrip(shots)
                 }
             }
         }
