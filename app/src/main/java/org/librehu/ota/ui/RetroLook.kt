@@ -23,6 +23,50 @@ object RetroLook {
     var palette: Palette? by mutableStateOf(null)
         private set
 
+    /**
+     * The launcher's style: modern, retro, factory (Modularer Infotainment-Baukasten: black, Source Sans 3, square)
+     * or ambient (LHU-Link: black to night blue lit by the accent, light text, square). Chosen in the launcher only.
+     */
+    var style: String by mutableStateOf("modern")
+        private set
+
+    val factory: Boolean get() = style == "factory"
+    val ambient: Boolean get() = style == "ambient"
+
+    /** Styles whose palette the app takes from the launcher. */
+    private fun styled(s: String?) = s != null && (s.startsWith("retro") || s == "factory" || s == "ambient")
+
+    /** Square corners in the factory and ambient styles, like the original systems; Material's otherwise. */
+    fun shapes(): androidx.compose.material3.Shapes =
+        if (factory || ambient) {
+            val square = androidx.compose.foundation.shape.RoundedCornerShape(0)
+            androidx.compose.material3.Shapes(extraSmall = square, small = square, medium = square, large = square, extraLarge = square)
+        } else {
+            androidx.compose.material3.Shapes()
+        }
+
+    /** Every text style of [t] through [f]. */
+    private fun mapStyles(
+        t: Typography,
+        f: (androidx.compose.ui.text.TextStyle) -> androidx.compose.ui.text.TextStyle,
+    ) = t.copy(
+        displayLarge = f(t.displayLarge),
+        displayMedium = f(t.displayMedium),
+        displaySmall = f(t.displaySmall),
+        headlineLarge = f(t.headlineLarge),
+        headlineMedium = f(t.headlineMedium),
+        headlineSmall = f(t.headlineSmall),
+        titleLarge = f(t.titleLarge),
+        titleMedium = f(t.titleMedium),
+        titleSmall = f(t.titleSmall),
+        bodyLarge = f(t.bodyLarge),
+        bodyMedium = f(t.bodyMedium),
+        bodySmall = f(t.bodySmall),
+        labelLarge = f(t.labelLarge),
+        labelMedium = f(t.labelMedium),
+        labelSmall = f(t.labelSmall),
+    )
+
     /** Segment display font chosen in the launcher (an older launcher: with its retro styles). */
     var segment: Boolean by mutableStateOf(false)
         private set
@@ -50,7 +94,8 @@ object RetroLook {
         palette =
             runCatching {
                 val style = c.getString(c.getColumnIndexOrThrow("style"))
-                if (style == null || !style.startsWith("retro")) return@runCatching null
+                this.style = style ?: "modern"
+                if (!styled(style)) return@runCatching null
                 val v = COLORS.map { Color(c.getInt(c.getColumnIndexOrThrow(it))) }
                 Palette(c.getInt(c.getColumnIndexOrThrow("dark")) != 0, v[0], v[1], v[2], v[3], v[4], v[5], v[6])
             }.getOrNull()
@@ -59,9 +104,10 @@ object RetroLook {
     /** From the launcher's THEME_CHANGED broadcast. */
     fun read(i: Intent) {
         val style = i.getStringExtra("style")
+        this.style = style ?: "modern"
         segment = i.getStringExtra("font")?.let { it == "segment" } ?: (style?.startsWith("retro") == true)
         palette =
-            if (style == null || !style.startsWith("retro") || COLORS.any { !i.hasExtra(it) }) {
+            if (!styled(style) || COLORS.any { !i.hasExtra(it) }) {
                 null
             } else {
                 val v = COLORS.map { Color(i.getIntExtra(it, 0)) }
@@ -71,7 +117,23 @@ object RetroLook {
 
     /** Segment display font everywhere when chosen in the launcher, Material's otherwise. */
     fun typography(): Typography {
-        if (!segment) return Typography()
+        if (!segment) {
+            return when {
+                // Factory style: Source Sans 3 (SIL OFL 1.1), regular and semibold.
+                factory -> {
+                    val f =
+                        FontFamily(
+                            Font(R.font.source_sans3_regular),
+                            Font(R.font.source_sans3_semibold, androidx.compose.ui.text.font.FontWeight.SemiBold),
+                            Font(R.font.source_sans3_semibold, androidx.compose.ui.text.font.FontWeight.Bold),
+                        )
+                    mapStyles(Typography()) { it.copy(fontFamily = f) }
+                }
+                // Ambient style: thin letters like the original.
+                ambient -> mapStyles(Typography()) { it.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Light) }
+                else -> Typography()
+            }
+        }
         val f = FontFamily(Font(R.font.librehu_seg14))
         return Typography().run {
             copy(

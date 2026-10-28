@@ -61,7 +61,7 @@ object CarColors {
 
     /** The app's palette, or LibreHU Launcher's retro one when its style is retro (same light / dark only). */
     var palette: CarPalette
-        get() = RetroLook.palette?.takeIf { it.dark == base.dark }?.let { r ->
+        get() = RetroLook.palette?.takeIf { it.dark == base.dark || RetroLook.factory || RetroLook.ambient }?.let { r ->
             base.copy(
                 background = r.background,
                 surface = r.surface,
@@ -114,6 +114,7 @@ fun CarTheme(content: @Composable () -> Unit) {
         }
     MaterialTheme(
         typography = RetroLook.typography(),
+        shapes = RetroLook.shapes(),
         colorScheme = scheme.withCarRoles(p.accent, p.onAccent, p.surface, p.surfaceHigh, p.text, p.textDim),
         content = content,
     )
