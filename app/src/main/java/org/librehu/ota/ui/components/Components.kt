@@ -43,6 +43,14 @@ import androidx.core.graphics.drawable.toBitmap
 import org.librehu.ota.R
 import org.librehu.ota.data.RateLimitException
 import org.librehu.ota.ui.CarColors
+import org.librehu.ota.ui.FactoryListTitle
+import org.librehu.ota.ui.KitLight
+import org.librehu.ota.ui.RetroLook
+import org.librehu.ota.ui.StyledPill
+import org.librehu.ota.ui.StyledSwitchRow
+import org.librehu.ota.ui.carPanel
+import org.librehu.ota.ui.carShape
+import org.librehu.ota.ui.carStyled
 import java.text.DateFormat
 import java.time.Instant
 import java.util.Date
@@ -62,8 +70,7 @@ fun Card(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(CarColors.Surface)
+                .carPanel(24.dp)
                 .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                 .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -81,6 +88,7 @@ fun Pill(
     small: Boolean = false,
     onClick: () -> Unit,
 ) {
+    if (carStyled) return StyledPill(label, selected, icon, enabled, onClick)
     Row(
         modifier =
             Modifier
@@ -123,7 +131,12 @@ fun <T> Choices(
 fun SectionTitle(
     text: String,
     modifier: Modifier = Modifier,
-) = Text(text, color = CarColors.Accent, fontSize = 17.sp, fontWeight = FontWeight.Medium, modifier = modifier)
+) = when {
+    // LibreHU Launcher's car styles: the title over the accent line, or in thin letters.
+    RetroLook.factory -> FactoryListTitle(text, modifier)
+    RetroLook.ambient -> Text(text, color = KitLight, fontSize = 21.sp, fontWeight = FontWeight.Light, modifier = modifier)
+    else -> Text(text, color = CarColors.Accent, fontSize = 17.sp, fontWeight = FontWeight.Medium, modifier = modifier)
+}
 
 @Composable
 fun Hint(text: String) = Text(text, color = CarColors.TextDim, fontSize = 14.sp)
@@ -142,6 +155,7 @@ fun SwitchLine(
     enabled: Boolean = true,
     onChange: (Boolean) -> Unit,
 ) {
+    if (carStyled) return StyledSwitchRow(title, hint, checked, enabled, onChange)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(enabled = enabled) { onChange(!checked) },

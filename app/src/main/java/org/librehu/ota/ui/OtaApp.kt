@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -103,7 +104,50 @@ fun OtaApp(
     val updates = apps.count { it.updateAvailable && it.app.packageName !in settings.ignored }
     val running = apps.count { it.working }
 
-    Row(Modifier.fillMaxSize().background(CarColors.Background)) {
+    // The page (or an app's details) under the bars, the same in every look.
+    val content: @Composable ColumnScope.() -> Unit = {
+        val d = details
+        val pending by repo.pendingRecovery.collectAsStateWithLifecycle()
+        if (pending.isNotEmpty()) RecoveryBanner(pending) { repo.rebootRecovery() }
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            if (d != null) {
+                AppDetailsScreen(d, repo, open)
+            } else {
+                val show: (String) -> Unit = { details = it }
+                when (page) {
+                    Page.APPS -> AppsScreen(repo, open, show)
+                    Page.UPDATES -> UpdatesScreen(repo, open, show)
+                    Page.ZIPS -> ZipsScreen()
+                    Page.COMPILE -> org.librehu.ota.ui.compile.CompileScreen()
+                    Page.DOWNLOADS -> DownloadsScreen(repo, show)
+                    Page.SETTINGS -> SettingsScreen(repo)
+                }
+            }
+        }
+    }
+    // LibreHU Launcher's car styles (the launcher asks the app for them): the pages as soft keys or tabs.
+    if (carStyled) {
+        val context = LocalContext.current
+        val d = details
+        OtaStyledFrame(
+            page = page,
+            onPage = {
+                page = it
+                details = null
+            },
+            title = if (d != null) apps.firstOrNull { it.app.packageName == d }?.app?.name.orEmpty() else stringResource(page.label),
+            subtitle = if (d == null) status(context, busy, message, repo.lastCheck, offline) else null,
+            details = d != null,
+            updates = updates,
+            running = running,
+            busy = busy,
+            onRefresh = if (d == null && page != Page.SETTINGS && page != Page.COMPILE) ({ repo.check() }) else null,
+            onBulk = { bulk = true },
+            onReboot = { repo.reboot() },
+            onRebootRecovery = { repo.rebootRecovery() },
+            content = content,
+        )
+    } else Row(Modifier.fillMaxSize().background(CarColors.Background)) {
         NavigationRail(
             containerColor = CarColors.Surface,
             modifier = Modifier.fillMaxHeight(),
@@ -153,23 +197,7 @@ fun OtaApp(
                 onReboot = { repo.reboot() },
                 onRebootRecovery = { repo.rebootRecovery() },
             )
-            val pending by repo.pendingRecovery.collectAsStateWithLifecycle()
-            if (pending.isNotEmpty()) RecoveryBanner(pending) { repo.rebootRecovery() }
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                if (d != null) {
-                    AppDetailsScreen(d, repo, open)
-                } else {
-                    val show: (String) -> Unit = { details = it }
-                    when (page) {
-                        Page.APPS -> AppsScreen(repo, open, show)
-                        Page.UPDATES -> UpdatesScreen(repo, open, show)
-                        Page.ZIPS -> ZipsScreen()
-                        Page.COMPILE -> org.librehu.ota.ui.compile.CompileScreen()
-                        Page.DOWNLOADS -> DownloadsScreen(repo, show)
-                        Page.SETTINGS -> SettingsScreen(repo)
-                    }
-                }
-            }
+            content()
         }
     }
     apps.firstOrNull { it.needsChoice }?.let { ChoiceDialogs(it, repo) }

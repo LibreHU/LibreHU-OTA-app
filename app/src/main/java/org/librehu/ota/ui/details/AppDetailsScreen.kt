@@ -1,5 +1,6 @@
 package org.librehu.ota.ui.details
 
+import org.librehu.ota.ui.carShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -240,7 +241,7 @@ private fun VersionRow(
     Column(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(carShape(16.dp))
             .background(if (selected) CarColors.Accent else CarColors.SurfaceHigh)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),

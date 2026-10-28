@@ -1,5 +1,6 @@
 package org.librehu.ota.ui.components
 
+import org.librehu.ota.ui.carShape
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -78,7 +79,7 @@ fun ScreenshotStrip(
                 RemoteImage(
                     s.url,
                     480,
-                    Modifier.fillMaxWidth().height(height.dp).clip(RoundedCornerShape(12.dp)).clickable { open = i },
+                    Modifier.fillMaxWidth().height(height.dp).clip(carShape(12.dp)).clickable { open = i },
                     s.caption,
                 )
                 if (s.caption.isNotEmpty()) {
@@ -117,7 +118,7 @@ private fun ScreenshotViewer(
                 Pill(stringResource(R.string.next), icon = Icons.AutoMirrored.Filled.ArrowForward, small = true, enabled = i < shots.size - 1) { i++ }
                 Pill(stringResource(R.string.close), icon = Icons.Default.Close, small = true, onClick = onClose)
             }
-            RemoteImage(s.url, 1280, Modifier.fillMaxWidth().weight(1f).aspectRatio(16f / 9f, matchHeightConstraintsFirst = true).clip(RoundedCornerShape(12.dp)), s.caption)
+            RemoteImage(s.url, 1280, Modifier.fillMaxWidth().weight(1f).aspectRatio(16f / 9f, matchHeightConstraintsFirst = true).clip(carShape(12.dp)), s.caption)
         }
     }
 }

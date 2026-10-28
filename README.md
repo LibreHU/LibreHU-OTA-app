@@ -229,7 +229,8 @@ au paquet indiqué dans `reply_to`. Rien d'autre que `id` n'est lancé ; une sec
 | ![Changements](docs/screenshots/logs.png)<br>Changements | ![Mises à jour](docs/screenshots/updates.png)<br>Mises à jour |
 | ![Zips](docs/screenshots/zips.png)<br>Zips | ![Téléchargements](docs/screenshots/downloads.png)<br>Téléchargements |
 | ![Réglages](docs/screenshots/settings.png)<br>Réglages | ![Réglages (2)](docs/screenshots/settings-2.png)<br>Réglages (2) |
-| ![Réglages (3)](docs/screenshots/settings-3.png)<br>Réglages (3) |   |
+| ![Réglages (3)](docs/screenshots/settings-3.png)<br>Réglages (3) | ![Style Modularer Infotainment-Baukasten](docs/screenshots/style-mib.png)<br>Style Modularer Infotainment-Baukasten |
+| ![Style LHU-Link](docs/screenshots/style-lhu-link.png)<br>Style LHU-Link |   |
 
 Captures sur l'émulateur Android 9 (1280×720, 160 dpi comme l'autoradio), sans autoradio branché : les valeurs du véhicule et de la MCU sont vides. Refaites-les avec l'action **Screenshots** de [LibreHU-OTA-app](https://github.com/LibreHU/LibreHU-OTA-app/tree/main/screenshots). Galerie : [librehu.github.io/screenshots/ota.html](https://librehu.github.io/screenshots/ota.html).
 
@@ -276,6 +277,13 @@ Android 11 et plus, `QUERY_ALL_PACKAGES` sert à voir toutes les applis du catal
 tard.
 
 **Styles Modularer Infotainment-Baukasten et LHU-Link de LibreHU Launcher** : c'est le launcher qui les choisit et les demande à l'appli (il publie `style` = `factory` ou `ambient`, comme pour le style rétro) ; l'appli suit tout de suite : palette noire du style même en mode jour, coins carrés partout, police Source Sans 3 pour Modularer Infotainment-Baukasten (SIL OFL 1.1, `third_party/SourceSans3-LICENSE.md`), lettres fines pour LHU-Link. Rien à régler dans l'appli.
+
+L'appli prend aussi la **mise en page** de ces styles (`ui/OtaStyled.kt`, éléments communs dans `ui/CarKit.kt`) :
+**Modularer Infotainment-Baukasten** = titre sur un trait de la couleur d'accent avec l'état de la dernière
+vérification et des touches encadrées (vérifier, tout dans /system, redémarrer), les pages (Applis, Mises à jour,
+Zips, Compilation, Téléchargements, Réglages) en touches du bas ; **LHU-Link** = pages en onglets encadrés, barre du bas
+Retour / Vérifier / Options (tout dans /system, redémarrer, redémarrer en TWRP). Cartes, interrupteurs, touches et
+titres de section prennent le dessin du style. Aucun logo, nom, icône, police ni image d'un constructeur.
 
 **Style rétro et police de LibreHU Launcher** : quand le launcher est en style rétro (les couleurs d'un afficheur
 d'autoradio tirées de sa couleur d'accent, couleur RGB comprise), cette appli prend sa palette (jour ou nuit) ; quand
