@@ -30,6 +30,13 @@ object RetroLook {
     var style: String by mutableStateOf("modern")
         private set
 
+    /** Key click sound chosen in the launcher (`click`: a name of [KeyClick.SOUNDS] or `off`); null: older launcher. */
+    var click: String? by mutableStateOf(null)
+        private set
+
+    /** The sound to play on taps: the launcher's choice, else the default of its style. */
+    val clickSound: String get() = click ?: KeyClick.default(style)
+
     val factory: Boolean get() = style == "factory"
     val ambient: Boolean get() = style == "ambient"
 
@@ -86,6 +93,7 @@ object RetroLook {
 
     /** From the provider's row (cursor on it). */
     fun read(c: Cursor) {
+        click = runCatching { c.getColumnIndex("click").takeIf { it >= 0 }?.let { c.getString(it) } }.getOrNull()
         segment =
             runCatching {
                 val i = c.getColumnIndex("font")
@@ -103,6 +111,7 @@ object RetroLook {
 
     /** From the launcher's THEME_CHANGED broadcast. */
     fun read(i: Intent) {
+        click = i.getStringExtra("click")
         val style = i.getStringExtra("style")
         this.style = style ?: "modern"
         segment = i.getStringExtra("font")?.let { it == "segment" } ?: (style?.startsWith("retro") == true)
