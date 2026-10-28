@@ -14,6 +14,12 @@ import org.librehu.ota.ui.ThemeFollower
 
 /** LibreHU Apps: the LibreHU apps, their versions on GitHub, install and update. */
 class MainActivity : ComponentActivity() {
+    /** A click on each tap, the sound of LibreHU Launcher's style (see KeyClick). */
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        org.librehu.ota.ui.KeyClick.onTouch(this, ev, org.librehu.ota.ui.RetroLook.style)
+        return super.dispatchTouchEvent(ev)
+    }
+
     private val theme =
         lazy {
             ThemeFollower(this) { dark, accent ->
