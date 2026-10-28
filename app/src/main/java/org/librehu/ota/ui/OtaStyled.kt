@@ -14,8 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SystemUpdateAlt
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
@@ -99,15 +97,24 @@ internal fun OtaStyledFrame(
                     FramedKey(Modifier.size(60.dp), onClick = { menu = true }) {
                         Icon(Icons.Default.PowerSettingsNew, stringResource(R.string.reboot), tint = Color.White, modifier = Modifier.size(30.dp))
                     }
-                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        DropdownMenuItem(text = { Text(stringResource(R.string.reboot)) }, onClick = {
-                            menu = false
-                            onReboot()
-                        })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.reboot_recovery)) }, onClick = {
-                            menu = false
-                            onRebootRecovery()
-                        })
+                    // Restart or recovery: a framed window with two keys, like the factory confirmations.
+                    if (menu) {
+                        CarAlertDialog(
+                            onDismissRequest = { menu = false },
+                            title = { Text(stringResource(R.string.reboot)) },
+                            dismissButton = {
+                                StyledPill(stringResource(R.string.reboot_recovery)) {
+                                    menu = false
+                                    onRebootRecovery()
+                                }
+                            },
+                            confirmButton = {
+                                StyledPill(stringResource(R.string.reboot)) {
+                                    menu = false
+                                    onReboot()
+                                }
+                            },
+                        )
                     }
                 }
             },

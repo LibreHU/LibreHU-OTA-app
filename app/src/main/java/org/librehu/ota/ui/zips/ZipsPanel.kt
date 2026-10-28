@@ -1,5 +1,6 @@
 package org.librehu.ota.ui.zips
 
+import org.librehu.ota.ui.CarAlertDialog
 import android.os.Build
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -152,7 +152,7 @@ fun ZipsPanel() {
     }
 
     confirm?.let { (z, action) ->
-        AlertDialog(
+        CarAlertDialog(
             onDismissRequest = { confirm = null },
             title = { Text(z.name) },
             text = {
@@ -203,7 +203,7 @@ fun ZipsPanel() {
         )
     }
     if (askReboot) {
-        AlertDialog(
+        CarAlertDialog(
             onDismissRequest = { askReboot = false },
             title = { Text(stringResource(R.string.cfg_reboot_title)) },
             text = { Text(stringResource(R.string.cfg_reboot_text)) },

@@ -1,5 +1,6 @@
 package org.librehu.ota.ui.details
 
+import org.librehu.ota.ui.CarAlertDialog
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -17,7 +18,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
@@ -76,7 +76,7 @@ private fun IncompatibleDialog(
     repo: AppRepository,
 ) {
     val pkg = s.app.packageName
-    AlertDialog(
+    CarAlertDialog(
         onDismissRequest = { repo.dismiss(pkg) },
         title = { Text(stringResource(R.string.incompatible_title, s.app.name)) },
         text = {
@@ -104,7 +104,7 @@ private fun DowngradeDialog(
     val pkg = s.app.packageName
     var root by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { root = withContext(Dispatchers.IO) { Root.isAvailable() } }
-    AlertDialog(
+    CarAlertDialog(
         onDismissRequest = { repo.dismiss(pkg) },
         title = { Text(stringResource(R.string.downgrade_title, s.app.name)) },
         text = {
@@ -139,7 +139,7 @@ private fun SystemDialog(
     val plan = t.plan
     var privApp by remember(t.apk) { mutableStateOf(plan.recommendPrivApp) }
     val best = stringResource(R.string.recommended)
-    AlertDialog(
+    CarAlertDialog(
         onDismissRequest = { repo.dismiss(pkg) },
         title = { Text(stringResource(R.string.system_title, s.app.name)) },
         text = {
@@ -220,7 +220,7 @@ fun LogsDialog(
         }
     val state = rememberLazyListState()
     LaunchedEffect(lines) { lines?.let { if (it.isNotEmpty()) state.scrollToItem(it.lastIndex) } }
-    AlertDialog(
+    CarAlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxWidth(0.95f),
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -279,7 +279,7 @@ fun BulkSystemDialog(
     var picked by remember {
         mutableStateOf(candidates.filter { it.systemCode != null && it.updateAvailable }.map { it.app.packageName }.toSet())
     }
-    AlertDialog(
+    CarAlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxWidth(0.9f),
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -354,7 +354,7 @@ fun UninstallDialog(
     val inSystem = s.systemCode != null && root
     var data by remember { mutableStateOf(inData) }
     var system by remember { mutableStateOf(!inData && inSystem) }
-    AlertDialog(
+    CarAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.uninstall_title, s.app.name)) },
         text = {

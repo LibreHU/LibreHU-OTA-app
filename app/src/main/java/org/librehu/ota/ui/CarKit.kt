@@ -963,3 +963,98 @@ internal fun Modifier.carPanel(
         RetroLook.ambient -> background(Color.Black.copy(alpha = 0.6f)).border(1.dp, CarColors.Accent)
         else -> clip(androidx.compose.foundation.shape.RoundedCornerShape(radius)).background(color)
     }
+
+// --- Dialogs -----------------------------------------------------------------------------------------------------
+
+/**
+ * [androidx.compose.material3.AlertDialog] in the launcher's style: a square black box in a thin white frame
+ * (factory), night blue framed in the accent colour (ambient); the Material dialog otherwise. Same slots.
+ */
+@Composable
+internal fun CarAlertDialog(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    dismissButton: @Composable (() -> Unit)? = null,
+    icon: @Composable (() -> Unit)? = null,
+    title: @Composable (() -> Unit)? = null,
+    text: @Composable (() -> Unit)? = null,
+    properties: androidx.compose.ui.window.DialogProperties = androidx.compose.ui.window.DialogProperties(),
+    containerColor: Color = androidx.compose.material3.AlertDialogDefaults.containerColor,
+) {
+    if (!carStyled) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = onDismissRequest,
+            confirmButton = confirmButton,
+            modifier = modifier,
+            dismissButton = dismissButton,
+            icon = icon,
+            title = title,
+            text = text,
+            properties = properties,
+            containerColor = containerColor,
+        )
+        return
+    }
+    val factory = RetroLook.factory
+    val accent = CarColors.Accent
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismissRequest, properties = properties) {
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.material3.LocalContentColor provides Color.White,
+            androidx.compose.material3.LocalTextStyle provides
+                androidx.compose.ui.text.TextStyle(
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = if (factory) FontWeight.Normal else FontWeight.Light,
+                ),
+        ) {
+            Column(
+                modifier
+                    .width(560.dp)
+                    .background(if (factory) Color.Black else Color(0xF20E1626))
+                    .border(BorderStroke(if (factory) 1.5.dp else 1.dp, if (factory) Color(0xFFE6E6E6) else accent)),
+            ) {
+                if (icon != null || title != null) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (icon != null) {
+                            icon()
+                            Spacer(Modifier.width(16.dp))
+                        }
+                        if (title != null) {
+                            androidx.compose.runtime.CompositionLocalProvider(
+                                androidx.compose.material3.LocalTextStyle provides
+                                    androidx.compose.material3.LocalTextStyle.current.copy(
+                                        fontSize = 24.sp,
+                                        fontWeight = if (factory) FontWeight.SemiBold else FontWeight.Light,
+                                    ),
+                            ) { title() }
+                        }
+                    }
+                    Box(Modifier.fillMaxWidth().height(1.dp).background(if (factory) accent else accent.copy(alpha = 0.8f)))
+                }
+                if (text != null) {
+                    Box(Modifier.fillMaxWidth().heightIn(max = 460.dp).padding(horizontal = 20.dp, vertical = 12.dp)) { text() }
+                }
+                Box(Modifier.fillMaxWidth().height(1.dp).background(if (factory) LINE else accent.copy(alpha = 0.8f)))
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                    dismissButton?.invoke()
+                    Spacer(Modifier.width(8.dp))
+                    confirmButton()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A Material screen of the app inside the launcher's frame when a car style is on ([StyledFrame]: framed Back and
+ * title, bars), as it is otherwise; the screen hides its own title row then.
+ */
+@Composable
+internal fun StyledPage(
+    title: String,
+    actions: List<StyledAction> = emptyList(),
+    content: @Composable () -> Unit,
+) {
+    if (carStyled) StyledFrame(title, actions) { content() } else content()
+}

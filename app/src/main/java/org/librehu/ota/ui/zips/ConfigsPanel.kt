@@ -1,5 +1,6 @@
 package org.librehu.ota.ui.zips
 
+import org.librehu.ota.ui.CarAlertDialog
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -157,7 +157,7 @@ fun ConfigsPanel() {
     }
 
     confirm?.let { c ->
-        AlertDialog(
+        CarAlertDialog(
             onDismissRequest = { confirm = null },
             title = { Text(c.name) },
             text = {
@@ -180,7 +180,7 @@ fun ConfigsPanel() {
         )
     }
     if (askReboot) {
-        AlertDialog(
+        CarAlertDialog(
             onDismissRequest = { askReboot = false },
             title = { Text(stringResource(R.string.cfg_reboot_title)) },
             text = { Text(stringResource(R.string.cfg_reboot_text)) },
