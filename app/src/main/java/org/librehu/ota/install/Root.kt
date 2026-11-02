@@ -5,7 +5,10 @@ import java.io.File
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
 
-/** `su` (Magisk, KernelSU, KernelSU Next, APatch, SuperSU): silent installs. */
+/**
+ * `su` (Magisk, KernelSU, KernelSU Next, APatch, SuperSU, and the old su of AOSP of some Jancar ROMs: [Su]): silent
+ * installs.
+ */
 object Root {
     private const val TAG = "LibreHU-OTA"
     private const val RETRY_MS = 30_000L
@@ -50,9 +53,19 @@ object Root {
         command: String,
         stdin: InputStream? = null,
         timeoutS: Long = 120,
+    ): Output? {
+        val out = exec(command, stdin, timeoutS) ?: return null
+        // The old su of AOSP refused -c before running anything: once more in its form (a stream is read only once).
+        return if (out.exit != 0 && Su.refused(out.output) && stdin == null) exec(command, null, timeoutS) else out
+    }
+
+    private fun exec(
+        command: String,
+        stdin: InputStream?,
+        timeoutS: Long,
     ): Output? =
         try {
-            val p = ProcessBuilder("su", "-c", command).redirectErrorStream(true).start()
+            val p = ProcessBuilder(*Su.argv(command)).redirectErrorStream(true).start()
             val out = StringBuilder()
             val reader =
                 Thread {

@@ -64,7 +64,7 @@ installation (`install/`) n'ont pas changé.
   une appli en arrière-plan ne peut plus ouvrir d'écran
   ([doc Android](https://developer.android.com/guide/components/activities/background-starts)) : la confirmation
   d'Android arrive aussi en **notification** (« Installer … ? », un toucher l'ouvre).
-- **Détection du root** : `su -c id` a 15 s pour répondre (le gestionnaire peut afficher sa demande), puis **un nouvel
+- **Détection du root** : `id` par `su` (`su -c id`, ou `su 0 sh -c id` avec le vieux `su` d'AOSP) a 15 s pour répondre (le gestionnaire peut afficher sa demande), puis **un nouvel
   essai** 2 s plus tard ; un refus est redemandé après 30 s. Un `su` qui ne rend pas la main ne bloque plus l'appli.
 - **Clé de signature vérifiée avant d'installer** : Android refuse une *mise à jour* signée avec une autre clé, pas
   une *première* installation. L'APK d'un dépôt `LibreHU/…` doit porter la clé LibreHU (certificat SHA-256
@@ -216,9 +216,15 @@ installation (`install/`) n'ont pas changé.
 Cette appli a besoin du root par SuperSU (installé dans la ROM) ; chaque demande doit être accordée avec « Se
 souvenir ». Pour que toutes les fenêtres SuperSU arrivent au même moment, l'assistant de premier démarrage de LibreHU
 Launcher (« Autoriser le root pour toutes les applis LibreHU ») interroge chaque appli LibreHU l'une après l'autre :
-`RootRequestReceiver`, sur `org.librehu.action.REQUEST_ROOT` envoyé à ce paquet, lance une fois `su -c id` (SuperSU
+`RootRequestReceiver`, sur `org.librehu.action.REQUEST_ROOT` envoyé à ce paquet, lance une fois `id` par `su` (SuperSU
 affiche alors la demande de cette appli), puis répond `org.librehu.action.ROOT_RESULT` (extras `package`, `granted`)
 au paquet indiqué dans `reply_to`. Rien d'autre que `id` n'est lancé ; une seconde demande dans les 20 s est ignorée. Seule une appli signée avec la clé LibreHU peut l'envoyer (permission de signature `org.librehu.permission.ROOT_REQUEST`).
+
+Toutes les commandes root passent par `Su.kt` : `su -c COMMANDE` pour Magisk, KernelSU, KernelSU Next, APatch et
+SuperSU, `su 0 sh -c COMMANDE` pour le vieux `su` d'AOSP de certaines ROM Jancar (`/system/xbin/su` :
+`su [UID [COMMANDE…]]`, refuse `-c` avec « invalid uid/gid »), reconnu une fois par `su -v` (les autres y répondent
+par leur version, sans demande de root). Avec KernelSU / KernelSU Next, autoriser l'appli dans le gestionnaire (liste
+Superuser) : le noyau ne détourne `/system/bin/su` que pour les applis autorisées.
 
 ## Captures d'écran
 
