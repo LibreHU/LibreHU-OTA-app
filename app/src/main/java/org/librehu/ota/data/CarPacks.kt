@@ -45,7 +45,7 @@ object CarPacks {
     data class Installed(
         val engine: String,
         val packs: Map<String, Int>,
-        /** SHA-256 of each installed pack file (services from v176). */
+        /** SHA-256 of each installed pack file (LibreHU service v177 or later). */
         val sha256: Map<String, String> = emptyMap(),
     ) {
         /** True when the pack [p] is installed as published: same SHA-256 (else same revision, older services). */
