@@ -45,7 +45,12 @@ object CarPacks {
     data class Installed(
         val engine: String,
         val packs: Map<String, Int>,
-    )
+        /** SHA-256 of each installed pack file (services from v176). */
+        val sha256: Map<String, String> = emptyMap(),
+    ) {
+        /** True when the pack [p] is installed as published: same SHA-256 (else same revision, older services). */
+        fun upToDate(p: Pack): Boolean = sha256[p.id]?.equals(p.sha256, ignoreCase = true) ?: ((packs[p.id] ?: -1) >= p.revision)
+    }
 
     fun parseIndex(text: String): List<Pack> {
         val root = JSONObject(text)
@@ -96,7 +101,12 @@ object CarPacks {
             if (code != Activity.RESULT_OK || data == null) return@let null
             val o = JSONObject(data)
             val p = o.optJSONObject("packs")
-            Installed(o.optString("engine"), p?.keys()?.asSequence()?.associateWith { p.getInt(it) }.orEmpty())
+            val h = o.optJSONObject("sha256")
+            Installed(
+                o.optString("engine"),
+                p?.keys()?.asSequence()?.associateWith { p.getInt(it) }.orEmpty(),
+                h?.keys()?.asSequence()?.associateWith { h.getString(it) }.orEmpty(),
+            )
         }
 
     /** Downloads [p], checks it and has LibreHU service install it; returns null when done, else the reason. */

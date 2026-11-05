@@ -124,6 +124,8 @@ fun CarPacksList(
         items(packs.orEmpty(), key = { it.id }) { p ->
             val have = installed?.packs?.get(p.id)
             val readable = installed != null && CarPacks.satisfies(p.engine, installed.engine)
+            // Same SHA-256 as the index: exactly the published pack.
+            val upToDate = have != null && installed.upToDate(p)
             Card {
                 Text(p.name, color = CarColors.Text, fontSize = 18.sp)
                 Text(
@@ -135,14 +137,14 @@ fun CarPacksList(
                     when {
                         installed != null && !readable -> stringResource(R.string.cars_needs_service)
                         have == null -> stringResource(R.string.cars_not_installed)
-                        have >= p.revision -> stringResource(R.string.cars_up_to_date, have)
+                        upToDate -> stringResource(R.string.cars_up_to_date, have)
                         else -> stringResource(R.string.cars_update_ready, p.revision)
                     },
-                    color = if (installed != null && !readable) ErrorColor else if (have != null && have < p.revision) CarColors.Accent else CarColors.TextDim,
+                    color = if (installed != null && !readable) ErrorColor else if (have != null && !upToDate) CarColors.Accent else CarColors.TextDim,
                     fontSize = 14.sp,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (readable && (have == null || have < p.revision)) {
+                    if (readable && !upToDate) {
                         Pill(
                             stringResource(if (have == null) R.string.cars_install else R.string.cars_update),
                             selected = true,
