@@ -10,6 +10,8 @@
     <uses-permission android:name="org.librehu.permission.ROOT_REQUEST" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Car profile packs installed into LibreHU service (its signature permission, data/CarPacks). -->
+    <uses-permission android:name="org.librehu.permission.HEADUNIT" />
     <!-- Network present or not (list kept offline, check again when it comes back). -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Without root: Android's package installer, the user confirms each install. -->

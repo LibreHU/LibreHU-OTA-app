@@ -308,4 +308,18 @@
     <string name="offline_installed">Installed</string>
     <string name="offline_confirm">Android asks for a confirmation</string>
     <string name="offline_reboot_recovery">Restart into TWRP now</string>
+    <string name="zips_tab_cars">Cars</string>
+    <string name="cars_hint">Car profiles by make for LibreHU service: a make is updated without updating the service.</string>
+    <string name="cars_no_service">LibreHU service does not answer: install or update it.</string>
+    <string name="cars_refresh">Refresh</string>
+    <string name="cars_count">%1$d cars</string>
+    <string name="cars_not_installed">Not installed: the profiles built into the service are used.</string>
+    <string name="cars_up_to_date">Installed, revision %1$d, up to date</string>
+    <string name="cars_update_ready">Revision %1$d available</string>
+    <string name="cars_needs_service">Needs a newer LibreHU service</string>
+    <string name="cars_install">Install</string>
+    <string name="cars_update">Update</string>
+    <string name="cars_remove">Remove</string>
+    <string name="cars_installed_ok">%1$s installed (revision %2$d)</string>
+    <string name="cars_failed">Not installed: %1$s</string>
 </resources>
