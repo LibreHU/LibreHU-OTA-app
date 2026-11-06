@@ -318,6 +318,31 @@ but non lucratif, dons récurrents) :
 [![Faire un don avec Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/DokT/donate)
 [![Donateurs sur Liberapay](https://img.shields.io/liberapay/patrons/DokT.svg?logo=liberapay)](https://liberapay.com/DokT/)
 
+## Licence
+
+Copyright (C) 2026 les contributeurs de LibreHU.
+
+Le code de ce dépôt est sous **GNU AGPL v3 ou ultérieure** (`AGPL-3.0-or-later`, fichier [`LICENSE`](LICENSE)), avec les
+[termes additionnels](LICENSE-ADDITIONAL-TERMS.md) de son article 7 : garder la mention « Basé sur LibreHU –
+https://github.com/LibreHU » et marquer une version modifiée comme telle. Qui distribue une version modifiée, ou la
+fait utiliser à distance, doit en donner le code source complet sous la même licence.
+
+### Code, ressources et données d'autres projets
+
+Ils gardent leur licence.
+
+| Quoi | Où | Auteur | Licence |
+|---|---|---|---|
+| Jetpack Compose, Material 3 et ses icônes, AndroidX (Activity, Core, Lifecycle) | bibliothèques | Google, The Android Open Source Project | Apache-2.0 |
+| Kotlin, kotlinx.coroutines | bibliothèques | JetBrains | Apache-2.0 |
+| Police Source Sans 3 | `app/src/main/res/font/` | Adobe | SIL OFL 1.1, `third_party/SourceSans3-LICENSE.md` |
+| Police « LibreHU Seg14 », tirée de DSEG14 | `app/src/main/res/font/` | [keshikan](https://github.com/keshikan/DSEG) | SIL OFL 1.1, `third_party/DSEG-LICENSE.txt` |
+| Sons des touches `Effect_Tick`, `KeypressStandard`, `KeypressSpacebar` | `app/src/main/res/raw/click_aosp_*` | The Android Open Source Project | Apache-2.0, `third_party/AOSP-NOTICE.txt` |
+| Sons des touches « Interface Sounds » (version WAV de Hugo Locurcio) | `app/src/main/res/raw/click_kenney_*` | [Kenney](https://kenney.nl/assets/interface-sounds) | CC0 1.0, `third_party/Kenney-Interface-Sounds-LICENSE.txt` |
+| Enveloppe Gradle | `gradlew`, `gradlew.bat`, `gradle/wrapper/` | Gradle | Apache-2.0 |
+
+Inspiration, sans code repris : l'organisation d'[Aurora Store](https://github.com/whyorean/AuroraStore).
+
 ## Contact
 
 [librehu@proton.me](mailto:librehu@proton.me)
