@@ -317,3 +317,7 @@ but non lucratif, dons récurrents) :
 
 [![Faire un don avec Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/DokT/donate)
 [![Donateurs sur Liberapay](https://img.shields.io/liberapay/patrons/DokT.svg?logo=liberapay)](https://liberapay.com/DokT/)
+
+## Contact
+
+[librehu@proton.me](mailto:librehu@proton.me)
