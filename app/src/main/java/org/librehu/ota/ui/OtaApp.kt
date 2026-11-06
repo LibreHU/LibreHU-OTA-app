@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -79,6 +80,7 @@ enum class Page(
     COMPILE(Icons.Default.Speed, R.string.nav_compile),
     DOWNLOADS(Icons.Default.Download, R.string.nav_downloads),
     SETTINGS(Icons.Default.Settings, R.string.nav_settings),
+    INFO(Icons.Default.Info, R.string.info_title),
 }
 
 /**
@@ -121,6 +123,7 @@ fun OtaApp(
                     Page.COMPILE -> org.librehu.ota.ui.compile.CompileScreen()
                     Page.DOWNLOADS -> DownloadsScreen(repo, show)
                     Page.SETTINGS -> SettingsScreen(repo)
+                    Page.INFO -> InfoContent()
                 }
             }
         }
@@ -141,7 +144,7 @@ fun OtaApp(
             updates = updates,
             running = running,
             busy = busy,
-            onRefresh = if (d == null && page != Page.SETTINGS && page != Page.COMPILE) ({ repo.check() }) else null,
+            onRefresh = if (d == null && page != Page.SETTINGS && page != Page.COMPILE && page != Page.INFO) ({ repo.check() }) else null,
             onBulk = { bulk = true },
             onReboot = { repo.reboot() },
             onRebootRecovery = { repo.rebootRecovery() },
@@ -191,7 +194,7 @@ fun OtaApp(
                 title = if (d != null) apps.firstOrNull { it.app.packageName == d }?.app?.name.orEmpty() else stringResource(page.label),
                 subtitle = if (d == null) status(context, busy, message, repo.lastCheck, offline) else null,
                 onBack = if (d != null) ({ details = null }) else null,
-                onRefresh = if (d == null && page != Page.SETTINGS && page != Page.COMPILE) ({ repo.check() }) else null,
+                onRefresh = if (d == null && page != Page.SETTINGS && page != Page.COMPILE && page != Page.INFO) ({ repo.check() }) else null,
                 busy = busy,
                 onBulk = { bulk = true },
                 onReboot = { repo.reboot() },

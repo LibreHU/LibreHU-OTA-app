@@ -322,4 +322,16 @@
     <string name="cars_remove">Retirer</string>
     <string name="cars_installed_ok">%1$s installé (révision %2$d)</string>
     <string name="cars_failed">Non installé : %1$s</string>
+    <string name="info_title">Infos</string>
+    <string name="info_version">Version %1$s</string>
+    <string name="info_based_on">Basé sur LibreHU – https://github.com/LibreHU</string>
+    <string name="info_copyright">Copyright (C) 2026 les contributeurs de LibreHU.</string>
+    <string name="info_licence">Logiciel libre : vous pouvez le partager et le modifier selon la GNU Affero General Public License, version 3 ou (à votre choix) toute version ultérieure, avec les termes additionnels de son article 7 : garder la mention « Basé sur LibreHU » et marquer une version modifiée comme telle. Qui distribue une version modifiée, ou la fait utiliser à distance, doit en donner le code source complet sous la même licence. Aucune garantie, dans la mesure permise par la loi (articles 15 et 16).</string>
+    <string name="info_source">Code source : %1$s</string>
+    <string name="info_contact">Contact : librehu@proton.me</string>
+    <string name="info_licence_text">GNU AGPL v3</string>
+    <string name="info_terms">Termes additionnels</string>
+    <string name="info_others">Code, ressources et données d\'autres projets</string>
+    <string name="info_others_hint">Toucher une ligne pour lire sa licence.</string>
+    <string name="info_close">Fermer</string>
 </resources>

@@ -327,6 +327,8 @@ Le code de ce dépôt est sous **GNU AGPL v3 ou ultérieure** (`AGPL-3.0-or-late
 https://github.com/LibreHU » et marquer une version modifiée comme telle. Qui distribue une version modifiée, ou la
 fait utiliser à distance, doit en donner le code source complet sous la même licence.
 
+L'appli affiche ces mentions dans la page **Infos** du rail : version, « Basé sur LibreHU », licence et termes additionnels, adresse du code source, contact, projets repris et texte de leurs licences.
+
 ### Code, ressources et données d'autres projets
 
 Ils gardent leur licence.
