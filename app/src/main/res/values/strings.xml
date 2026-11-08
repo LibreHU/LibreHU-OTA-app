@@ -313,6 +313,7 @@
     <string name="cars_no_service">LibreHU service does not answer: install or update it.</string>
     <string name="cars_refresh">Refresh</string>
     <string name="cars_count">%1$d cars</string>
+    <string name="cars_box_types">%1$d CAN box types (Hiworld, Raise…): the makes\' profiles name them; LibreHU service installs it by itself</string>
     <string name="cars_not_installed">Not installed: the profiles built into the service are used.</string>
     <string name="cars_up_to_date">Installed, revision %1$d, up to date</string>
     <string name="cars_update_ready">Revision %1$d available</string>

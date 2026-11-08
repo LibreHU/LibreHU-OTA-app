@@ -129,7 +129,11 @@ fun CarPacksList(
             Card {
                 Text(p.name, color = CarColors.Text, fontSize = 18.sp)
                 Text(
-                    stringResource(R.string.cars_count, p.cars) + " · " + p.makes.take(4).joinToString(", ") + if (p.makes.size > 4) "…" else "",
+                    if (p.id == CarPacks.BOXES) {
+                        stringResource(R.string.cars_box_types, p.profiles.size)
+                    } else {
+                        stringResource(R.string.cars_count, p.cars) + " · " + p.makes.take(4).joinToString(", ") + if (p.makes.size > 4) "…" else ""
+                    },
                     color = CarColors.TextDim,
                     fontSize = 14.sp,
                 )

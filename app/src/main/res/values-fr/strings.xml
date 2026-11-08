@@ -313,6 +313,7 @@
     <string name="cars_no_service">LibreHU service ne répond pas : l\'installer ou le mettre à jour.</string>
     <string name="cars_refresh">Actualiser</string>
     <string name="cars_count">%1$d voitures</string>
+    <string name="cars_box_types">%1$d types de boîtiers CAN (Hiworld, Raise…) : les fiches des marques les nomment ; LibreHU service l\'installe tout seul</string>
     <string name="cars_not_installed">Non installé : les fiches intégrées au service sont utilisées.</string>
     <string name="cars_up_to_date">Installé, révision %1$d, à jour</string>
     <string name="cars_update_ready">Révision %1$d disponible</string>

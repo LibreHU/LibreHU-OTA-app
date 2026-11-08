@@ -29,6 +29,9 @@ object CarPacks {
     /** Largest pack handed over in a broadcast (Binder transactions stop at 1 MB). */
     private const val MAX_BYTES = 512 * 1024
 
+    /** The pack of the CAN box types (generic profile of each type, service 2.6), not a make. */
+    const val BOXES = "boxes"
+
     data class Pack(
         val id: String,
         val name: String,
@@ -36,6 +39,8 @@ object CarPacks {
         val engine: String,
         val makes: List<String>,
         val cars: Int,
+        /** Profile ids of the pack (the box types' pack: one per box type). */
+        val profiles: List<String> = emptyList(),
         val file: String,
         val size: Int,
         val sha256: String,
@@ -59,6 +64,7 @@ object CarPacks {
         return (0 until arr.length()).map { i ->
             val o = arr.getJSONObject(i)
             val makes = o.optJSONArray("makes")
+            val profiles = o.optJSONArray("profiles")
             Pack(
                 id = o.getString("id"),
                 name = o.optString("name", o.getString("id")),
@@ -66,6 +72,7 @@ object CarPacks {
                 engine = o.optString("engine", ">=1.0"),
                 makes = (0 until (makes?.length() ?: 0)).map { makes!!.getString(it) },
                 cars = o.optInt("cars"),
+                profiles = (0 until (profiles?.length() ?: 0)).map { profiles!!.getString(it) },
                 file = o.getString("file"),
                 size = o.optInt("size"),
                 sha256 = o.getString("sha256"),
@@ -129,7 +136,7 @@ object CarPacks {
         return if (answer.first == Activity.RESULT_OK) null else answer.second ?: "refused"
     }
 
-    /** Has LibreHU service remove the pack [id] (its make's built-in profiles come back). */
+    /** Has LibreHU service remove the pack [id] (its profiles go; a chosen one falls back to its box type's generic profile). */
     suspend fun remove(
         context: Context,
         id: String,
