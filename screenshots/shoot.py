@@ -35,7 +35,8 @@ def adb(*args, check=False):
 def download():
     os.makedirs(APKS, exist_ok=True)
     for app in PLAN["apps"]:
-        sh("gh", "release", "download", app["tag"], "-R", app["repo"], "-p", "*.apk", "-O",
+        # "pattern": the app's APK when its release has several (the service's has LibreHU-JacSettings too).
+        sh("gh", "release", "download", app["tag"], "-R", app["repo"], "-p", app.get("pattern", "*.apk"), "-O",
            os.path.join(APKS, app["id"] + ".apk"), "--clobber")
 
 

@@ -1242,6 +1242,7 @@
    "id": "service",
    "repo": "LibreHU/LibreHU-service",
    "tag": "latest-main",
+   "pattern": "LibreHU-service-*.apk",
    "pkg": "org.librehu.service",
    "steps": [
     [
