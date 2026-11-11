@@ -41,6 +41,8 @@ object CarPacks {
         val cars: Int,
         /** Profile ids of the pack (the box types' pack: one per box type). */
         val profiles: List<String> = emptyList(),
+        /** Each make of the pack and its models (index of LibreHU-car-profiles from 11/2026; empty before). */
+        val models: Map<String, List<String>> = emptyMap(),
         val file: String,
         val size: Int,
         val sha256: String,
@@ -65,6 +67,7 @@ object CarPacks {
             val o = arr.getJSONObject(i)
             val makes = o.optJSONArray("makes")
             val profiles = o.optJSONArray("profiles")
+            val models = o.optJSONObject("models")
             Pack(
                 id = o.getString("id"),
                 name = o.optString("name", o.getString("id")),
@@ -73,6 +76,12 @@ object CarPacks {
                 makes = (0 until (makes?.length() ?: 0)).map { makes!!.getString(it) },
                 cars = o.optInt("cars"),
                 profiles = (0 until (profiles?.length() ?: 0)).map { profiles!!.getString(it) },
+                models =
+                    models
+                        ?.keys()
+                        ?.asSequence()
+                        ?.associateWith { m -> models.optJSONArray(m)?.let { a -> (0 until a.length()).map { a.getString(it) } }.orEmpty() }
+                        .orEmpty(),
                 file = o.getString("file"),
                 size = o.optInt("size"),
                 sha256 = o.getString("sha256"),

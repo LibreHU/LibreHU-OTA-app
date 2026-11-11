@@ -150,6 +150,10 @@ def play(app):
             time.sleep(2)
         elif op == "wait":
             time.sleep(float(args[0]))
+        elif op == "text":
+            # ["text", words]: typed into the field that has the focus (adb wants %s for a space)
+            adb("shell", "input", "text", args[0].replace(" ", "%s"))
+            time.sleep(2)
         elif op == "tap":
             # ["tap", regex] or ["tap", regex, n]: the n-th node matching (0 = first)
             xy = find(dump(), args[0], int(args[1]) if len(args) > 1 else 0)

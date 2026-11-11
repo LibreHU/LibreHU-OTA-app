@@ -308,7 +308,13 @@
     <string name="offline_installed">Installed</string>
     <string name="offline_confirm">Android asks for a confirmation</string>
     <string name="offline_reboot_recovery">Restart into TWRP now</string>
-    <string name="zips_tab_cars">Cars</string>
+    <string name="nav_cars">Cars</string>
+    <string name="cars_search">Search a make or a model</string>
+    <string name="cars_clear">Clear</string>
+    <string name="cars_all_makes">All makes</string>
+    <string name="cars_all_models">All models</string>
+    <string name="cars_none">No car matches: other words, or another make.</string>
+    <string name="cars_models">Models: %1$s</string>
     <string name="cars_hint">Car profiles by make for LibreHU service: a make is updated without updating the service.</string>
     <string name="cars_no_service">LibreHU service does not answer: install or update it.</string>
     <string name="cars_refresh">Refresh</string>

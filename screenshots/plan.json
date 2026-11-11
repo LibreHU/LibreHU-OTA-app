@@ -2229,6 +2229,42 @@
     ],
     [
      "tap",
+     "^Voitures$"
+    ],
+    [
+     "wait",
+     8
+    ],
+    [
+     "shot",
+     "cars"
+    ],
+    [
+     "tap",
+     "^Audi$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "cars-make"
+    ],
+    [
+     "tap",
+     "^A6L$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "cars-model"
+    ],
+    [
+     "tap",
      "^Zips$"
     ],
     [
@@ -2326,6 +2362,34 @@
     [
      "shot",
      "settings-3"
+    ],
+    [
+     "tap",
+     "^Voitures$"
+    ],
+    [
+     "wait",
+     6
+    ],
+    [
+     "tap",
+     "^Chercher une marque ou un modèle$"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "text",
+     "clio"
+    ],
+    [
+     "wait",
+     2
+    ],
+    [
+     "shot",
+     "cars-search"
     ]
    ],
    "grant": [

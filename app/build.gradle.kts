@@ -87,4 +87,6 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.coroutines.android)
+    // Pure logic tested on the JVM (data/CarFilter…): ./gradlew :app:testDebugUnitTest
+    testImplementation("junit:junit:4.13.2")
 }
