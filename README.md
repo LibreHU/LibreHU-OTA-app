@@ -234,6 +234,8 @@ Superuser) : le noyau ne détourne `/system/bin/su` que pour les applis autoris�
 | ![Configuration](docs/screenshots/setup.png)<br>Configuration | ![Applis](docs/screenshots/apps.png)<br>Applis |
 | ![Fiche d'une appli](docs/screenshots/details.png)<br>Fiche d'une appli | ![Versions](docs/screenshots/versions.png)<br>Versions |
 | ![Changements](docs/screenshots/logs.png)<br>Changements | ![Mises à jour](docs/screenshots/updates.png)<br>Mises à jour |
+| ![Voitures](docs/screenshots/cars.png)<br>Voitures | ![Voitures : une marque, puis un modèle](docs/screenshots/cars-model.png)<br>Voitures : une marque, puis un modèle |
+| ![Voitures : recherche](docs/screenshots/cars-search.png)<br>Voitures : recherche |   |
 | ![Zips](docs/screenshots/zips.png)<br>Zips | ![Téléchargements](docs/screenshots/downloads.png)<br>Téléchargements |
 | ![Réglages](docs/screenshots/settings.png)<br>Réglages | ![Réglages (2)](docs/screenshots/settings-2.png)<br>Réglages (2) |
 | ![Réglages (3)](docs/screenshots/settings-3.png)<br>Réglages (3) | ![Style Modularer Infotainment-Baukasten](docs/screenshots/style-mib.png)<br>Style Modularer Infotainment-Baukasten |
