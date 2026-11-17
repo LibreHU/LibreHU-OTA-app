@@ -265,31 +265,31 @@ object SystemInstall {
         # LibreHU Apps: $pkg in /system/$rel
         OUTFD=${'$'}2; ZIP=${'$'}3
         ui() { echo "ui_print ${'$'}1" > /proc/self/fd/${'$'}OUTFD; echo "ui_print" > /proc/self/fd/${'$'}OUTFD; }
-        fail() { ui "ERREUR : ${'$'}1"; umount /librehu_system 2>/dev/null; exit 1; }
-        ui "LibreHU Apps : $pkg -> /system/$rel"
+        fail() { ui "ERROR: ${'$'}1"; umount /librehu_system 2>/dev/null; exit 1; }
+        ui "LibreHU Apps: $pkg -> /system/$rel"
         DEV=""
         for d in /dev/block/platform/bootdevice/by-name/system /dev/block/by-name/system /dev/block/platform/*/by-name/system; do
           [ -e "${'$'}d" ] && DEV=${'$'}d && break
         done
-        [ -n "${'$'}DEV" ] || fail "partition system introuvable"
+        [ -n "${'$'}DEV" ] || fail "system partition not found"
         umount /system_root 2>/dev/null; umount /system 2>/dev/null
         mkdir -p /librehu_system
         blockdev --setrw "${'$'}DEV" 2>/dev/null
-        mount -t ext4 -o rw "${'$'}DEV" /librehu_system || fail "montage de system en ecriture impossible"
+        mount -t ext4 -o rw "${'$'}DEV" /librehu_system || fail "cannot mount system read-write"
         S=/librehu_system/system; [ -f ${'$'}S/build.prop ] || S=/librehu_system
-        [ -f ${'$'}S/build.prop ] || fail "build.prop absent de la partition system"
+        [ -f ${'$'}S/build.prop ] || fail "build.prop missing from the system partition"
         T=/tmp/librehu_sys; rm -rf ${'$'}T; mkdir -p ${'$'}T
-        unzip -o -q "${'$'}ZIP" base.apk perms.xml -d ${'$'}T 2>/dev/null; [ -f ${'$'}T/base.apk ] || fail "APK absent du zip"
-        [ -n "$old" ] && rm -rf "${'$'}S/$old" && ui "ancienne copie /system/$old retiree"
-        rm -rf "${'$'}S/$rel"; mkdir -p "${'$'}S/$rel" || fail "dossier impossible (system plein ?)"
-        cp ${'$'}T/base.apk "${'$'}S/$rel/$pkg.apk" || fail "copie impossible (system plein ?)"
+        unzip -o -q "${'$'}ZIP" base.apk perms.xml -d ${'$'}T 2>/dev/null; [ -f ${'$'}T/base.apk ] || fail "APK missing from the zip"
+        [ -n "$old" ] && rm -rf "${'$'}S/$old" && ui "old copy /system/$old removed"
+        rm -rf "${'$'}S/$rel"; mkdir -p "${'$'}S/$rel" || fail "cannot create the folder (system full?)"
+        cp ${'$'}T/base.apk "${'$'}S/$rel/$pkg.apk" || fail "cannot copy (system full?)"
         chmod 755 "${'$'}S/$rel"; chmod 644 "${'$'}S/$rel/$pkg.apk"; chown -R 0:0 "${'$'}S/$rel"
         X="${'$'}S/etc/permissions/privapp-permissions-$pkg.xml"
         if [ "${if (perms) 1 else 0}" = 1 ]; then cp ${'$'}T/perms.xml "${'$'}X" && chmod 644 "${'$'}X" && chown 0:0 "${'$'}X"; else rm -f "${'$'}X"; fi
         chcon -R u:object_r:system_file:s0 "${'$'}S/$rel" 2>/dev/null; chcon u:object_r:system_file:s0 "${'$'}X" 2>/dev/null
-        cmp -s ${'$'}T/base.apk "${'$'}S/$rel/$pkg.apk" || fail "verification de l'APK echouee"
+        cmp -s ${'$'}T/base.apk "${'$'}S/$rel/$pkg.apk" || fail "check of the APK failed"
         sync; umount /librehu_system; rm -rf ${'$'}T
-        ui "Termine : actif au demarrage d'Android."
+        ui "Done: active at the next Android boot."
         exit 0
         """.trimIndent() + "\n"
 
@@ -333,23 +333,23 @@ object SystemInstall {
             # LibreHU Apps: remove $pkg from /system/$rel
             OUTFD=${'$'}2
             ui() { echo "ui_print ${'$'}1" > /proc/self/fd/${'$'}OUTFD; echo "ui_print" > /proc/self/fd/${'$'}OUTFD; }
-            fail() { ui "ERREUR : ${'$'}1"; umount /librehu_system 2>/dev/null; exit 1; }
-            ui "LibreHU Apps : suppression de /system/$rel"
+            fail() { ui "ERROR: ${'$'}1"; umount /librehu_system 2>/dev/null; exit 1; }
+            ui "LibreHU Apps: removing /system/$rel"
             DEV=""
             for d in /dev/block/platform/bootdevice/by-name/system /dev/block/by-name/system /dev/block/platform/*/by-name/system; do
               [ -e "${'$'}d" ] && DEV=${'$'}d && break
             done
-            [ -n "${'$'}DEV" ] || fail "partition system introuvable"
+            [ -n "${'$'}DEV" ] || fail "system partition not found"
             umount /system_root 2>/dev/null; umount /system 2>/dev/null
             mkdir -p /librehu_system
             blockdev --setrw "${'$'}DEV" 2>/dev/null
-            mount -t ext4 -o rw "${'$'}DEV" /librehu_system || fail "montage de system en ecriture impossible"
+            mount -t ext4 -o rw "${'$'}DEV" /librehu_system || fail "cannot mount system read-write"
             S=/librehu_system/system; [ -f ${'$'}S/build.prop ] || S=/librehu_system
-            [ -f ${'$'}S/build.prop ] || fail "build.prop absent de la partition system"
+            [ -f ${'$'}S/build.prop ] || fail "build.prop missing from the system partition"
             rm -rf "${'$'}S/$rel"; rm -f "${'$'}S/etc/permissions/privapp-permissions-$pkg.xml"
-            [ -e "${'$'}S/$rel" ] && fail "suppression impossible"
+            [ -e "${'$'}S/$rel" ] && fail "cannot delete"
             sync; umount /librehu_system
-            ui "Termine : $pkg n'est plus dans /system."
+            ui "Done: $pkg is no longer in /system."
             exit 0
             """.trimIndent() + "\n"
         ZipOutputStream(zip.outputStream()).use { z ->
